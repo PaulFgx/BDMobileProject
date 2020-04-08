@@ -43,10 +43,10 @@ class ToDoListAdapter : RecyclerView.Adapter<ToDoViewHolder>() {
             super.getItemOffsets(outRect, view, parent, state)
             parent.run {
                 outRect.set(
-                    dp(8),
-                    dp(4),
-                    dp(8),
-                    dp(4)
+                    dp(1),
+                    dp(0),
+                    dp(1),
+                    dp(0)
                 )
             }
         }

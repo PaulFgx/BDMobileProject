@@ -12,15 +12,21 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
 
     fun bind(toDoItem: Task) {
 
-        itemView.tv_nom.text = toDoItem.name
-
-        itemView.setOnClickListener {
-            toDoItem.isSelected = !toDoItem.isSelected
-            itemView.checkbox.isChecked = toDoItem.isSelected
-        }
-
-        itemView.checkbox.setOnClickListener {
-            toDoItem.isSelected = itemView.checkbox.isChecked
+        itemView.apply {
+            tv_nom.text = toDoItem.name
+            setOnClickListener {
+                toDoItem.isSelected = !toDoItem.isSelected
+                checkbox.isChecked = toDoItem.isSelected
+            }
+            checkbox.setOnClickListener {
+                toDoItem.isSelected = itemView.checkbox.isChecked
+            }
+            expand_action.setOnClickListener {
+                if (container2.visibility == View.GONE)
+                    container2.visibility = View.VISIBLE
+                else
+                    container2.visibility = View.GONE
+            }
         }
     }
 

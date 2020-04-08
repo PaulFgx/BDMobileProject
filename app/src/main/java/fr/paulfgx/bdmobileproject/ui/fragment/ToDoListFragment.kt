@@ -49,7 +49,7 @@ class ToDoListFragment : Fragment(), IAddTaskListener {
             AddTaskWidget(this)
         }
 
-        // loadAdapter()
+        loadAdapter()
     }
 
     override fun OnRequestAddingTask(toDoItem: Task) {
@@ -60,10 +60,9 @@ class ToDoListFragment : Fragment(), IAddTaskListener {
 
     private fun loadAdapter()
     {
-
         todoList.add(Task("Faire les courses", false))
         todoList.add(Task("Préparer la tartiflette", false))
-        todoList.add(Task("Faire le tour du monde en pédalo", true))
+        todoList.add(Task("Faire le tour du monde", true))
         todoList.add(Task("Dire bonjour à son voisin", false))
         todoList.add(Task("Avancer le projet", true))
         toDoListAdapter.submitList(todoList)
