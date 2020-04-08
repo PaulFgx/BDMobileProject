@@ -7,9 +7,8 @@
     tools:context=".ui.fragment.ToDoListFragment">
 
     <androidx.recyclerview.widget.RecyclerView
+        android:paddingVertical="4dp"
         android:id="@+id/todo_list_recycler_view"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
