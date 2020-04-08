@@ -1,14 +1,17 @@
-package fr.paulfgx.bdmobileproject
+package fr.paulfgx.bdmobileproject.ui.activity
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import androidx.navigation.findNavController
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
+import fr.paulfgx.bdmobileproject.R
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -40,5 +43,16 @@ class MainActivity : AppCompatActivity() {
                 Log.w(TAG, "Failed to read value.", error.toException())
             }
         })
+    }
+
+    override fun onNavigateUp(): Boolean {
+        // We just say to the activity that its back stack will manage by the NavController
+        return findNavController(R.id.main_fragment_container).navigateUp()
+    }
+
+    private fun initToolBar() {
+        setSupportActionBar(main_tool_bar)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
+        main_tool_bar.setNavigationOnClickListener { onNavigateUp() }
     }
 }

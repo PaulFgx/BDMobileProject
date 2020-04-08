@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BDMobileProject</string>
+    <string name="to_do">To Do</string>
 </resources>
