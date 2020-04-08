@@ -7,16 +7,14 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import fr.paulfgx.bdmobileproject.R
-import fr.paulfgx.bdmobileproject.data.model.Task
-import fr.paulfgx.bdmobileproject.ui.utils.hideKeyboard
 
-class AddTaskWidget(
-    private val fragment: ITaskListener
+class DeleteTaskWidget(
+    private val fragment: ITaskListener, position: Int
 ) {
     init {
         if (fragment is Fragment) {
             val alertDialog = AlertDialog.Builder(fragment.context)
-            alertDialog.setTitle("ADD TASK")
+            alertDialog.setTitle("ARE YOU SURE ?")
 
             // Get the LayoutInflater from Context
             val layoutInflater: LayoutInflater = LayoutInflater.from(fragment.context)
@@ -31,22 +29,22 @@ class AddTaskWidget(
             alertDialog.setView(view)
 
             val btnOk = view.findViewById<Button>(R.id.btn_ok)
+            btnOk.text = "Oui"
             val btnCancel = view.findViewById<Button>(R.id.btn_cancel)
+            btnCancel.text = "Non"
             val editext = view.findViewById<EditText>(R.id.edittext)
+            editext.visibility = View.GONE
             val alert = alertDialog.create()
             alert.show()
 
             btnOk.setOnClickListener {
-                if (editext.text.isNotBlank()) {
-                    fragment.OnRequestAddingTask(Task(editext.text.toString(), false))
-                    alert.dismiss()
-                    fragment.requireView().hideKeyboard()
-                }
+                fragment.OnRequestDeleteTask(position)
+                alert.dismiss()
             }
             btnCancel.setOnClickListener {
                 alert.dismiss()
-                fragment.requireView().hideKeyboard()
             }
         }
     }
 }
+

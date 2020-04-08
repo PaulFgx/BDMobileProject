@@ -3,12 +3,16 @@ package fr.paulfgx.bdmobileproject.ui.adapter
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.utils.dp
+import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import fr.paulfgx.bdmobileproject.ui.widget.holder.ToDoViewHolder
 
-class ToDoListAdapter : RecyclerView.Adapter<ToDoViewHolder>() {
+class ToDoListAdapter(
+    private val fragment: ITaskListener
+) : RecyclerView.Adapter<ToDoViewHolder>(){
 
     private var _data = emptyList<Task>()
 
@@ -19,7 +23,7 @@ class ToDoListAdapter : RecyclerView.Adapter<ToDoViewHolder>() {
     override fun getItemCount(): Int = _data.count()
 
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
-        holder.bind(_data[position])
+        holder.bind(fragment, _data[position], position)
     }
 
     /**

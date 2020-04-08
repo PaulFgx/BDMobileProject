@@ -10,12 +10,11 @@ import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
-import fr.paulfgx.bdmobileproject.ui.widget.customviews.IAddTaskListener
+import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import kotlinx.android.synthetic.main.fragment_todolist.*
 import kotlinx.android.synthetic.main.fragment_todolist.view.*
-import kotlinx.android.synthetic.main.fragment_todolist.view.fab
 
-class ToDoListFragment : Fragment(), IAddTaskListener {
+class ToDoListFragment : Fragment(), ITaskListener {
 
     private lateinit var toDoListAdapter: ToDoListAdapter
     private var todoList = mutableListOf<Task>()
@@ -39,7 +38,7 @@ class ToDoListFragment : Fragment(), IAddTaskListener {
             this.setDisplayHomeAsUpEnabled(false)
         }
         // We need to inject the OnUserClickListener in the constructor of the adapter
-        toDoListAdapter = ToDoListAdapter()
+        toDoListAdapter = ToDoListAdapter(this)
         view.todo_list_recycler_view.apply {
             adapter = toDoListAdapter
             if (itemDecorationCount == 0) addItemDecoration(ToDoListAdapter.OffsetDecoration())
@@ -53,9 +52,17 @@ class ToDoListFragment : Fragment(), IAddTaskListener {
     }
 
     override fun OnRequestAddingTask(toDoItem: Task) {
-
         todoList.add(toDoItem)
         toDoListAdapter.submitList(todoList)
+    }
+
+    override fun OnRequestDeleteTask(position: Int) {
+        todoList.removeAt(position)
+        toDoListAdapter.submitList(todoList)
+    }
+
+    override fun OnRequestUpdateTask(toDoItem: Task, position: Int) {
+        TODO("Not yet implemented")
     }
 
     private fun loadAdapter()
