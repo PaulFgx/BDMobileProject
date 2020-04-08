@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "93824166013",
+    "firebase_url": "https://bdmobileproject-3000a.firebaseio.com",
+    "project_id": "bdmobileproject-3000a",
+    "storage_bucket": "bdmobileproject-3000a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:93824166013:android:0e2fa7edb2ab7de4962914",
+        "android_client_info": {
+          "package_name": "fr.paulfgx.bdmobileproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "93824166013-92fihqn92qvlmfpm8030ktj24lbpmh0h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe4imsOOzRvYv6i7NU3IlQWerjk8KQDGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "93824166013-92fihqn92qvlmfpm8030ktj24lbpmh0h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
