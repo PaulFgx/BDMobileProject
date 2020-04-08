@@ -4,13 +4,13 @@ import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import fr.paulfgx.bdmobileproject.data.model.ToDoItem
+import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.utils.dp
 import fr.paulfgx.bdmobileproject.ui.widget.holder.ToDoViewHolder
 
 class ToDoListAdapter : RecyclerView.Adapter<ToDoViewHolder>() {
 
-    private var _data = emptyList<ToDoItem>()
+    private var _data = emptyList<Task>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ToDoViewHolder {
         return ToDoViewHolder.newInstance(parent)
@@ -25,7 +25,7 @@ class ToDoListAdapter : RecyclerView.Adapter<ToDoViewHolder>() {
     /**
      * Set new data in the list and refresh it
      */
-    fun submitList(data: List<ToDoItem>) {
+    fun submitList(data: List<Task>) {
         _data = data
         notifyDataSetChanged()
     }

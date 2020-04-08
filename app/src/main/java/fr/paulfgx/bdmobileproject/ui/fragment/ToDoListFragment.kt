@@ -4,18 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import fr.paulfgx.bdmobileproject.R
-import fr.paulfgx.bdmobileproject.data.model.ToDoItem
+import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
+import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
+import fr.paulfgx.bdmobileproject.ui.widget.customviews.IAddTaskListener
+import kotlinx.android.synthetic.main.fragment_todolist.*
 import kotlinx.android.synthetic.main.fragment_todolist.view.*
+import kotlinx.android.synthetic.main.fragment_todolist.view.fab
 
-class ToDoListFragment : Fragment() {
+class ToDoListFragment : Fragment(), IAddTaskListener {
 
     private lateinit var toDoListAdapter: ToDoListAdapter
+    private var todoList = mutableListOf<Task>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,17 +45,27 @@ class ToDoListFragment : Fragment() {
             if (itemDecorationCount == 0) addItemDecoration(ToDoListAdapter.OffsetDecoration())
         }
 
-        loadAdapter()
+        fab.setOnClickListener {
+            AddTaskWidget(this)
+        }
+
+        // loadAdapter()
+    }
+
+    override fun OnRequestAddingTask(toDoItem: Task) {
+
+        todoList.add(toDoItem)
+        toDoListAdapter.submitList(todoList)
     }
 
     private fun loadAdapter()
     {
-        var todoList = mutableListOf<ToDoItem>()
-        todoList.add(ToDoItem("Faire les courses", false))
-        todoList.add(ToDoItem("Préparer la tartiflette", false))
-        todoList.add(ToDoItem("Faire le tour du monde en pédalo", true))
-        todoList.add(ToDoItem("Dire bonjour à son voisin", false))
-        todoList.add(ToDoItem("Avancer le projet", true))
+
+        todoList.add(Task("Faire les courses", false))
+        todoList.add(Task("Préparer la tartiflette", false))
+        todoList.add(Task("Faire le tour du monde en pédalo", true))
+        todoList.add(Task("Dire bonjour à son voisin", false))
+        todoList.add(Task("Avancer le projet", true))
         toDoListAdapter.submitList(todoList)
     }
 }

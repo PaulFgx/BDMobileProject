@@ -1,6 +1,6 @@
 package fr.paulfgx.bdmobileproject.data.model
 
-data class ToDoItem(
+data class Task(
     var name: String,
     var isSelected: Boolean
 )

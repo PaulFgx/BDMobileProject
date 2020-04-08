@@ -5,15 +5,19 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import fr.paulfgx.bdmobileproject.R
-import fr.paulfgx.bdmobileproject.data.model.ToDoItem
+import fr.paulfgx.bdmobileproject.data.model.Task
 import kotlinx.android.synthetic.main.holder_todo.view.*
 
 class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(toDoItem: ToDoItem) {
+    fun bind(toDoItem: Task) {
 
         itemView.tv_nom.text = toDoItem.name
-        itemView.checkbox.isChecked = toDoItem.isSelected
+
+        itemView.setOnClickListener {
+            toDoItem.isSelected = !toDoItem.isSelected
+            itemView.checkbox.isChecked = toDoItem.isSelected
+        }
 
         itemView.checkbox.setOnClickListener {
             toDoItem.isSelected = itemView.checkbox.isChecked

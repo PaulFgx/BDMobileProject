@@ -14,13 +14,14 @@
         android:layout_height="?actionBarSize"
         android:background="?colorPrimary"
         app:layout_constraintTop_toTopOf="parent"
-        app:titleTextColor="@android:color/white" />
+        app:titleTextColor="@color/color_on_primary" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/main_fragment_container"
         android:name="androidx.navigation.fragment.NavHostFragment"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:background="@color/color_primary_variant"
         app:defaultNavHost="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/main_tool_bar"
