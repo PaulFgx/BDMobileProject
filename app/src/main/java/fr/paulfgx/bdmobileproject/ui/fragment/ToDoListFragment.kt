@@ -1,10 +1,16 @@
 package fr.paulfgx.bdmobileproject.ui.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
@@ -17,7 +23,12 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 class ToDoListFragment : Fragment(), ITaskListener {
 
     private lateinit var toDoListAdapter: ToDoListAdapter
+
     private var todoList = mutableListOf<Task>()
+
+    companion object {
+        private const val TAG = "ReadValue"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,6 +63,10 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     override fun OnRequestAddingTask(toDoItem: Task) {
+        val listFirebase = Firebase.database.getReference("Tasks")
+        var child = listFirebase.child(toDoItem.name)
+        val dictionary: Map<String, Any> = hashMapOf("name" to toDoItem.name, "checked" to toDoItem.isSelected )
+        child.setValue(dictionary)
         todoList.add(toDoItem)
         toDoListAdapter.submitList(todoList)
     }
@@ -67,11 +82,35 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     private fun loadAdapter() {
-        todoList.add(Task("Faire les courses", false))
-        todoList.add(Task("Préparer la tartiflette", false))
-        todoList.add(Task("Faire le tour du monde", true))
-        todoList.add(Task("Dire bonjour à son voisin", false))
-        todoList.add(Task("Avancer le projet", true))
+
+        val listFirebase = Firebase.database.getReference("Tasks")
+        // Read from the database
+        listFirebase.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                for (ds in dataSnapshot.children) {
+                    var name: String? = ""
+                    var checked: Boolean? = false
+                    for (dss in ds.children) {
+                        var value = ds.value
+                        var key = ds.key
+                        if (key == "name")
+                            name = value.toString()
+                        if (key == "checked")
+                            checked = value as Boolean
+                    }
+                    todoList.add(Task(name!!, checked!!))
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                // Failed to read value
+                Log.w(TAG, "Failed to read value.", error.toException())
+            }
+        })
+
+
+
         toDoListAdapter.submitList(todoList)
     }
 }
