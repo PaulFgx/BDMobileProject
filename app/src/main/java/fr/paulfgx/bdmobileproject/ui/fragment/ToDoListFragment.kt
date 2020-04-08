@@ -62,11 +62,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     override fun OnRequestUpdateTask(toDoItem: Task, position: Int) {
-        TODO("Not yet implemented")
+        todoList[position] = toDoItem
+        toDoListAdapter.submitList(todoList)
     }
 
-    private fun loadAdapter()
-    {
+    private fun loadAdapter() {
         todoList.add(Task("Faire les courses", false))
         todoList.add(Task("Préparer la tartiflette", false))
         todoList.add(Task("Faire le tour du monde", true))

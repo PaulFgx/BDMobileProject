@@ -8,6 +8,7 @@ import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.DeleteTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
+import fr.paulfgx.bdmobileproject.ui.widget.customviews.UpdateTaskWidget
 import kotlinx.android.synthetic.main.holder_todo.view.*
 
 class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -33,6 +34,9 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
             }
             delete.setOnClickListener {
                 DeleteTaskWidget(fragment, position)
+            }
+            update.setOnClickListener {
+                UpdateTaskWidget(toDoItem, fragment, position)
             }
         }
     }
