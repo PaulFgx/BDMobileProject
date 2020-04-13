@@ -68,17 +68,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
         getDataFromFirebase()
     }
 
-    override fun OnRequestAddingTask(toDoItem: Task) {
-        writeNewTask(toDoItem)
-        taskList.add(toDoItem)
-        toDoListAdapter.submitList(taskList)
-    }
-
-    private fun writeNewTask(task: Task) {
+    override fun OnRequestAddingTask(task: Task) {
         task.id = "Task"+(maxId + 1)
-        tasksRef.child(task.id).setValue(task).addOnCompleteListener {
-            maxId++
-        }
+        writeNewTask(task)
+        taskList.add(task)
+        toDoListAdapter.submitList(taskList)
     }
 
     override fun OnRequestDeleteTask(position: Int) {
@@ -86,9 +80,23 @@ class ToDoListFragment : Fragment(), ITaskListener {
         toDoListAdapter.submitList(taskList)
     }
 
-    override fun OnRequestUpdateTask(toDoItem: Task, position: Int) {
-        taskList[position] = toDoItem
+    override fun OnRequestUpdateTask(task: Task, position: Int) {
+        updateTask(task)
+        taskList[position] = task
         toDoListAdapter.submitList(taskList)
+    }
+
+    //region Firebase Access
+    private fun writeNewTask(task: Task) {
+        tasksRef.child(task.id).setValue(task).addOnCompleteListener {
+            maxId++
+        }
+    }
+
+    private fun updateTask(task: Task) {
+        // ref.child("myDb").child("awais@gmailcom").child("leftSpace").setValue("YourDateHere");
+        val taskId = task.id
+        tasksRef.child(task.id).setValue(task)
     }
 
     private fun getDataFromFirebase() {
@@ -111,4 +119,5 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
         })
     }
+    //endregion
 }

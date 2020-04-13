@@ -42,7 +42,7 @@ class UpdateTaskWidget(
 
             btnOk.setOnClickListener {
                 if (editext.text.isNotBlank()) {
-                    fragment.OnRequestUpdateTask(Task(editext.text.toString(), task.isSelected), position)
+                    fragment.OnRequestUpdateTask(Task(editext.text.toString(), task.isSelected, task.id), position)
                     alert.dismiss()
                     fragment.requireView().hideKeyboard()
                 }
