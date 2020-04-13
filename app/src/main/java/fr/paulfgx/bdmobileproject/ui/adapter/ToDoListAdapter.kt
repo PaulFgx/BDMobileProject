@@ -3,7 +3,6 @@ package fr.paulfgx.bdmobileproject.ui.adapter
 import android.graphics.Rect
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.utils.dp

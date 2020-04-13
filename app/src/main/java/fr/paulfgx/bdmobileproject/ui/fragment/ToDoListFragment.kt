@@ -85,6 +85,10 @@ class ToDoListFragment : Fragment(), ITaskListener {
         toDoListAdapter.submitList(taskList)
     }
 
+    override fun onCheckedChangeListener(task: Task) {
+        updateTaskInFirebase(task)
+    }
+
     //region Firebase Access
     private fun writeNewTaskInFirebase(task: Task) {
         tasksRef.child(task.id).setValue(task).addOnCompleteListener {

@@ -6,4 +6,5 @@ interface ITaskListener {
     fun onRequestAddingTask(task: Task)
     fun onRequestUpdateTask(task: Task, position: Int)
     fun onRequestDeleteTask(task: Task, position: Int)
+    fun onCheckedChangeListener(task: Task)
 }

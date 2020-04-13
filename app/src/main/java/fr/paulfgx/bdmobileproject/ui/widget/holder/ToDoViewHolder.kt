@@ -18,12 +18,14 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
         itemView.apply {
             val context = itemView.context
             tv_nom.text = task.name
+            checkbox.isChecked = task.isSelected
             setOnClickListener {
                 task.isSelected = !task.isSelected
                 checkbox.isChecked = task.isSelected
             }
             checkbox.setOnClickListener {
                 task.isSelected = itemView.checkbox.isChecked
+                fragment.onCheckedChangeListener(task)
             }
             container2.visibility = View.GONE
             expand_action.setOnClickListener {
