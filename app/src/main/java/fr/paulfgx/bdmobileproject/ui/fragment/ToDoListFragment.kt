@@ -6,10 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.google.firebase.FirebaseError
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -68,35 +66,38 @@ class ToDoListFragment : Fragment(), ITaskListener {
         getDataFromFirebase()
     }
 
-    override fun OnRequestAddingTask(task: Task) {
+    override fun onRequestAddingTask(task: Task) {
         task.id = "Task"+(maxId + 1)
-        writeNewTask(task)
+        writeNewTaskInFirebase(task)
         taskList.add(task)
         toDoListAdapter.submitList(taskList)
     }
 
-    override fun OnRequestDeleteTask(position: Int) {
+    override fun onRequestDeleteTask(task: Task, position: Int) {
+        deleteTaskInFirebase(task)
         taskList.removeAt(position)
         toDoListAdapter.submitList(taskList)
     }
 
-    override fun OnRequestUpdateTask(task: Task, position: Int) {
-        updateTask(task)
+    override fun onRequestUpdateTask(task: Task, position: Int) {
+        updateTaskInFirebase(task)
         taskList[position] = task
         toDoListAdapter.submitList(taskList)
     }
 
     //region Firebase Access
-    private fun writeNewTask(task: Task) {
+    private fun writeNewTaskInFirebase(task: Task) {
         tasksRef.child(task.id).setValue(task).addOnCompleteListener {
             maxId++
         }
     }
 
-    private fun updateTask(task: Task) {
-        // ref.child("myDb").child("awais@gmailcom").child("leftSpace").setValue("YourDateHere");
-        val taskId = task.id
+    private fun updateTaskInFirebase(task: Task) {
         tasksRef.child(task.id).setValue(task)
+    }
+
+    private fun  deleteTaskInFirebase(task: Task) {
+        tasksRef.child(task.id).removeValue();
     }
 
     private fun getDataFromFirebase() {

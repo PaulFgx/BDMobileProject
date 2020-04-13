@@ -11,8 +11,8 @@ import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.utils.hideKeyboard
 
 class UpdateTaskWidget(
-    private val task: Task,
     private val fragment: ITaskListener,
+    private val task: Task,
     position: Int
 ) {
     init {
@@ -42,7 +42,7 @@ class UpdateTaskWidget(
 
             btnOk.setOnClickListener {
                 if (editext.text.isNotBlank()) {
-                    fragment.OnRequestUpdateTask(Task(editext.text.toString(), task.isSelected, task.id), position)
+                    fragment.onRequestUpdateTask(Task(editext.text.toString(), task.isSelected, task.id), position)
                     alert.dismiss()
                     fragment.requireView().hideKeyboard()
                 }

@@ -7,9 +7,11 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
 import fr.paulfgx.bdmobileproject.R
+import fr.paulfgx.bdmobileproject.data.model.Task
 
 class DeleteTaskWidget(
     private val fragment: ITaskListener,
+    task: Task,
     position: Int
 ) {
     init {
@@ -39,7 +41,7 @@ class DeleteTaskWidget(
             alert.show()
 
             btnOk.setOnClickListener {
-                fragment.OnRequestDeleteTask(position)
+                fragment.onRequestDeleteTask(task, position)
                 alert.dismiss()
             }
             btnCancel.setOnClickListener {

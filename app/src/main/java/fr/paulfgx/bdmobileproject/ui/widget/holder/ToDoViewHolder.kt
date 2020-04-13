@@ -13,17 +13,17 @@ import kotlinx.android.synthetic.main.holder_todo.view.*
 
 class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(fragment: ITaskListener, toDoItem: Task, position: Int) {
+    fun bind(fragment: ITaskListener, task: Task, position: Int) {
 
         itemView.apply {
             val context = itemView.context
-            tv_nom.text = toDoItem.name
+            tv_nom.text = task.name
             setOnClickListener {
-                toDoItem.isSelected = !toDoItem.isSelected
-                checkbox.isChecked = toDoItem.isSelected
+                task.isSelected = !task.isSelected
+                checkbox.isChecked = task.isSelected
             }
             checkbox.setOnClickListener {
-                toDoItem.isSelected = itemView.checkbox.isChecked
+                task.isSelected = itemView.checkbox.isChecked
             }
             container2.visibility = View.GONE
             expand_action.setOnClickListener {
@@ -33,10 +33,10 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
                     container2.visibility = View.GONE
             }
             delete.setOnClickListener {
-                DeleteTaskWidget(fragment, position)
+                DeleteTaskWidget(fragment, task, position)
             }
             update.setOnClickListener {
-                UpdateTaskWidget(toDoItem, fragment, position)
+                UpdateTaskWidget(fragment, task, position)
             }
         }
     }
