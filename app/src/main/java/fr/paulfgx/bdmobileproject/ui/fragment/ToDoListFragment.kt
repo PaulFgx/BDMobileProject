@@ -6,8 +6,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.google.firebase.FirebaseError
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -22,9 +24,12 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
+    private val tasksRef = Firebase.database.reference.child("Tasks")
+    var maxId: Long = 0;
+
     private lateinit var toDoListAdapter: ToDoListAdapter
 
-    private var todoList = mutableListOf<Task>()
+    private var taskList = mutableListOf<Task>()
 
     companion object {
         private const val TAG = "ReadValue"
@@ -32,6 +37,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        tasksRef.keepSynced(true)
     }
 
     override fun onCreateView(
@@ -59,58 +65,50 @@ class ToDoListFragment : Fragment(), ITaskListener {
             AddTaskWidget(this)
         }
 
-        loadAdapter()
+        getDataFromFirebase()
     }
 
     override fun OnRequestAddingTask(toDoItem: Task) {
-        val listFirebase = Firebase.database.getReference("Tasks")
-        var child = listFirebase.child(toDoItem.name)
-        val dictionary: Map<String, Any> = hashMapOf("name" to toDoItem.name, "checked" to toDoItem.isSelected )
-        child.setValue(dictionary)
-        todoList.add(toDoItem)
-        toDoListAdapter.submitList(todoList)
+        writeNewTask(toDoItem)
+        taskList.add(toDoItem)
+        toDoListAdapter.submitList(taskList)
+    }
+
+    private fun writeNewTask(task: Task) {
+        task.id = "Task"+(maxId + 1)
+        tasksRef.child(task.id).setValue(task).addOnCompleteListener {
+            maxId++
+        }
     }
 
     override fun OnRequestDeleteTask(position: Int) {
-        todoList.removeAt(position)
-        toDoListAdapter.submitList(todoList)
+        taskList.removeAt(position)
+        toDoListAdapter.submitList(taskList)
     }
 
     override fun OnRequestUpdateTask(toDoItem: Task, position: Int) {
-        todoList[position] = toDoItem
-        toDoListAdapter.submitList(todoList)
+        taskList[position] = toDoItem
+        toDoListAdapter.submitList(taskList)
     }
 
-    private fun loadAdapter() {
-
-        val listFirebase = Firebase.database.getReference("Tasks")
-        // Read from the database
-        listFirebase.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-
-                for (ds in dataSnapshot.children) {
-                    var name: String? = ""
-                    var checked: Boolean? = false
-                    for (dss in ds.children) {
-                        var value = ds.value
-                        var key = ds.key
-                        if (key == "name")
-                            name = value.toString()
-                        if (key == "checked")
-                            checked = value as Boolean
-                    }
-                    todoList.add(Task(name!!, checked!!))
-                }
+    private fun getDataFromFirebase() {
+        tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(error: DatabaseError) {
+                Log.d("FirebaseError", error.message)
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                // Failed to read value
-                Log.w(TAG, "Failed to read value.", error.toException())
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                maxId = dataSnapshot.childrenCount
+                val taskMap = dataSnapshot.value as? HashMap<Any,Any>
+                taskMap?.map { entry ->
+                    val task = entry.value as HashMap<Any,Any>
+                    val id = entry.key as String
+                    val name = task["name"] as String
+                    val isChecked = task["selected"] as Boolean
+                    taskList.add(Task(name, isChecked, id))
+                }
+                toDoListAdapter.submitList(taskList)
             }
         })
-
-
-
-        toDoListAdapter.submitList(todoList)
     }
 }
