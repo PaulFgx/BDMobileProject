@@ -7,6 +7,8 @@ import android.util.Log
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.get
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -18,6 +20,7 @@ import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
+import fr.paulfgx.bdmobileproject.ui.viewmodel.ToDoListFragmentViewModel
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import kotlinx.android.synthetic.main.fragment_todolist.*
@@ -25,6 +28,7 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
+    private lateinit var viewModel: ToDoListFragmentViewModel
     private var mapIdToPosition = mutableMapOf<String, Int>()
     private val tasksRef = Firebase.database.reference.child("Tasks")
     private var taskList = mutableListOf<Task>()
@@ -36,6 +40,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel = ViewModelProvider(this@ToDoListFragment, ToDoListFragmentViewModel).get()
         setHasOptionsMenu(true)
         tasksRef.keepSynced(true)
     }
@@ -74,20 +79,33 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            /**
-             * Handling toolbar submenu item click here
-             */
             R.id.item_name -> {
-                //
+                viewModel.sortByName(taskList) { res ->
+                    taskList = res
+                    updateMapWithNewPositions()
+                    toDoListAdapter.submitList(taskList)
+                }
             }
             R.id.item_created_at -> {
-                //
+                viewModel.sortByCreatedAt(taskList) { res ->
+                    taskList = res
+                    updateMapWithNewPositions()
+                    toDoListAdapter.submitList(taskList)
+                }
             }
-            R.id.item_created_at -> {
-                //
+            R.id.item_updated_at -> {
+                viewModel.sortByUpdatedAt(taskList) { res ->
+                    taskList = res
+                    updateMapWithNewPositions()
+                    toDoListAdapter.submitList(taskList)
+                }
             }
             R.id.item_checked -> {
-                //
+                viewModel.sortByChecked(taskList) { res ->
+                    taskList = res
+                    updateMapWithNewPositions()
+                    toDoListAdapter.submitList(taskList)
+                }
             }
         }
         return super.onOptionsItemSelected(item)
