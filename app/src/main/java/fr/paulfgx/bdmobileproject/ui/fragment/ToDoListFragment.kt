@@ -6,6 +6,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
+import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -21,7 +22,6 @@ import fr.paulfgx.bdmobileproject.ui.viewmodel.ToDoListFragmentViewModel
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import kotlinx.android.synthetic.main.fragment_todolist.*
-import kotlinx.android.synthetic.main.fragment_todolist.view.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
@@ -56,17 +56,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
             this.setTitle(R.string.to_do)
             this.setDisplayHomeAsUpEnabled(false)
         }
-        // We need to inject the OnUserClickListener in the constructor of the adapter
-        toDoListAdapter = ToDoListAdapter(this)
-        view.todo_list_recycler_view.apply {
-            adapter = toDoListAdapter
-            if (itemDecorationCount == 0) addItemDecoration(ToDoListAdapter.OffsetDecoration())
-        }
-
-        fab.setOnClickListener {
-            AddTaskWidget(this)
-        }
-
+        manageAdapterAndRecyclerView()
+        manageFabVisibility()
+        createFabClickListener()
         getDataFromFirebase()
     }
 
@@ -122,6 +114,28 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onCheckedChangeListener(task: Task) {
         updateTaskInFirebase(task)
+    }
+
+    private fun createFabClickListener() {
+        fab.setOnClickListener {
+            AddTaskWidget(this)
+        }
+    }
+
+    private fun manageAdapterAndRecyclerView() {
+        toDoListAdapter = ToDoListAdapter(this)
+        todo_list_recycler_view.apply {
+            adapter = toDoListAdapter
+            if (itemDecorationCount == 0) addItemDecoration(ToDoListAdapter.OffsetDecoration())
+        }
+    }
+
+    private fun manageFabVisibility() {
+        todo_list_recycler_view.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0) fab.hide() else if (dy < 0) fab.show()
+            }
+        })
     }
 
     private fun updateMapWithNewPositions() {
