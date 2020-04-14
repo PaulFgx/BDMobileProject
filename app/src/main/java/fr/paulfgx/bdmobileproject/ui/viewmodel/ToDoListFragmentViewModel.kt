@@ -3,8 +3,6 @@ package fr.paulfgx.bdmobileproject.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.database.ktx.database
-import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.data.model.Task
 import kotlinx.coroutines.launch
 

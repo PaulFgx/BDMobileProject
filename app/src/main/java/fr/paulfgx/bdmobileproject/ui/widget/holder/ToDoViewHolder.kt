@@ -1,5 +1,6 @@
 package fr.paulfgx.bdmobileproject.ui.widget.holder
 
+import android.animation.LayoutTransition
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,6 +21,15 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
             tv_created_at.text = "Created At : "+ task.createdAt
             tv_updated_at.text = "Updated At : "+ task.updatedAt
             checkbox.isChecked = task.isSelected
+
+            container2.visibility = View.GONE
+            expand_action.setImageResource(R.drawable.ic_expand_more)
+
+            // Setup Layout Transition
+            view_holder_root.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
+            view_holder_root.layoutTransition.setDuration(300)
+
+            // Click Listeners
             setOnClickListener {
                 task.isSelected = !task.isSelected
                 checkbox.isChecked = task.isSelected
@@ -29,8 +39,6 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
                 task.isSelected = itemView.checkbox.isChecked
                 fragment.onCheckedChangeListener(task)
             }
-            container2.visibility = View.GONE
-            expand_action.setImageResource(R.drawable.ic_expand_more)
             expand_action.setOnClickListener {
                 if (container2.visibility == View.GONE) {
                     expand_action.setImageResource(R.drawable.ic_expand_less)
