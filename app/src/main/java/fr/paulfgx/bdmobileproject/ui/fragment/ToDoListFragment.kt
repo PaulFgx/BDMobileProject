@@ -16,6 +16,7 @@ import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
+import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import kotlinx.android.synthetic.main.fragment_todolist.*
@@ -90,8 +91,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
     //region Firebase Access
     private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
         var idTask = tasksRef.push().key!!
-        map.put(idTask, map.size - 1)
-        val task = Task(name, isSelected, idTask)
+        map[idTask] = map.size - 1
+        val currentTime = getCurrentDateTime()
+        val task = Task(name, isSelected, currentTime, currentTime, idTask)
         tasksRef.child(idTask).setValue(task)
         taskList.add(task)
         toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
@@ -107,6 +109,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     private fun getDataFromFirebase() {
 
+        // Get Data once when opening the application
         tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
                 Log.d("FirebaseError", error.message)
@@ -119,7 +122,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     val firebaseId = entry.key as String
                     val name = task["name"] as String
                     val isChecked = task["selected"] as Boolean
-                    taskList.add(Task(name, isChecked, firebaseId))
+                    val createdAt = task["createdAt"] as String
+                    val updatedAt = task["updatedAt"] as String
+                    taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     map.put(firebaseId, map.size - 1)
                 }
                 toDoListAdapter.submitList(taskList)
@@ -130,6 +135,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     private fun observeChange() {
+
         tasksRef.addChildEventListener(object : ChildEventListener {
 
             override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
@@ -138,9 +144,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val task = dataSnapshot.value as HashMap<Any, Any>
                 val name = task["name"] as String
                 val isChecked = task["selected"] as Boolean
-                val firebaseId = dataSnapshot.key
+                val createdAt = task["createdAt"] as String
+                val updatedAt = task["updatedAt"] as String
+                val firebaseId = dataSnapshot.key as String
                 if (!map.containsKey(firebaseId)) {
-                    taskList.add(Task(name, isChecked, firebaseId!!))
+                    taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
                 }
             }
