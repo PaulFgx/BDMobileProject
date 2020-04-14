@@ -16,8 +16,9 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
     fun bind(fragment: ITaskListener, task: Task, position: Int) {
 
         itemView.apply {
-            val context = itemView.context
             tv_nom.text = task.name
+            tv_created_at.text = "Created At : "+ task.createdAt
+            tv_updated_at.text = "Updated At : "+ task.updatedAt
             checkbox.isChecked = task.isSelected
             setOnClickListener {
                 task.isSelected = !task.isSelected

@@ -116,9 +116,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val taskMap = dataSnapshot.value as? HashMap<Any, Any>
+                val taskMap = dataSnapshot.value as? HashMap<*, *>
                 taskMap?.map { entry ->
-                    val task = entry.value as HashMap<Any, Any>
+                    val task = entry.value as HashMap<*, *>
                     val firebaseId = entry.key as String
                     val name = task["name"] as String
                     val isChecked = task["selected"] as Boolean
@@ -141,7 +141,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
                 Log.d(TAG, "onChildAdded:" + dataSnapshot.key!!)
                 // A new task has been added, add it to the displayed list
-                val task = dataSnapshot.value as HashMap<Any, Any>
+                val task = dataSnapshot.value as HashMap<*, *>
                 val name = task["name"] as String
                 val isChecked = task["selected"] as Boolean
                 val createdAt = task["createdAt"] as String
