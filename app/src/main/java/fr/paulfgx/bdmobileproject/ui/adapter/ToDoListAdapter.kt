@@ -22,7 +22,7 @@ class ToDoListAdapter(
     override fun getItemCount(): Int = _data.count()
 
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
-        holder.bind(fragment, _data[position], position)
+        holder.bind(fragment, _data[position])
     }
 
     /**

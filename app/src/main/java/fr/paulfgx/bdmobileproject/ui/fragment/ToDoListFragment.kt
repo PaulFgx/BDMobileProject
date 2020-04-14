@@ -14,6 +14,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
+import fr.paulfgx.bdmobileproject.data.singletons.MapHolder
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
@@ -25,7 +26,7 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 class ToDoListFragment : Fragment(), ITaskListener {
 
     private val tasksRef = Firebase.database.reference.child("Tasks")
-    var map = mutableMapOf<String, Int>()
+    //var map = mutableMapOf<String, Int>()
 
     private lateinit var toDoListAdapter: ToDoListAdapter
 
@@ -80,8 +81,6 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onRequestUpdateTask(task: Task, position: Int) {
         updateTaskInFirebase(task)
-        //taskList[position] = task
-        //toDoListAdapter.submitList(taskList)
     }
 
     override fun onCheckedChangeListener(task: Task) {
@@ -91,7 +90,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
     //region Firebase Access
     private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
         var idTask = tasksRef.push().key!!
-        map[idTask] = map.size - 1
+        MapHolder.mapIdToPosition[idTask] = MapHolder.mapIdToPosition.size - 1
         val currentTime = getCurrentDateTime()
         val task = Task(name, isSelected, currentTime, currentTime, idTask)
         tasksRef.child(idTask).setValue(task)
@@ -101,6 +100,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     private fun updateTaskInFirebase(task: Task) {
         tasksRef.child(task.firebaseId).setValue(task)
+        val position = MapHolder.mapIdToPosition[task.firebaseId] as Int
+        taskList[position] = task
+        toDoListAdapter.notifyItemChanged(position)
     }
 
     private fun deleteTaskInFirebase(task: Task) {
@@ -125,7 +127,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     val createdAt = task["createdAt"] as String
                     val updatedAt = task["updatedAt"] as String
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
-                    map.put(firebaseId, map.size - 1)
+                    MapHolder.mapIdToPosition.put(firebaseId, MapHolder.mapIdToPosition.size)
                 }
                 toDoListAdapter.submitList(taskList)
 
@@ -147,21 +149,29 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val createdAt = task["createdAt"] as String
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
-                if (!map.containsKey(firebaseId)) {
+                if (!MapHolder.mapIdToPosition.containsKey(firebaseId)) {
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
                 }
             }
 
             override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
-                /*Log.d(TAG, "onChildChanged: ${dataSnapshot.key}")
+                Log.d(TAG, "onChildChanged: ${dataSnapshot.key}")
 
-                // A comment has changed, use the key to determine if we are displaying this
-                // comment and if so displayed the changed comment.
-                val newComment = dataSnapshot.getValue<Comment>()
-                val commentKey = dataSnapshot.key
+                val task = dataSnapshot.value as HashMap<*, *>
+                val name = task["name"] as String
+                val isChecked = task["selected"] as Boolean
+                val createdAt = task["createdAt"] as String
+                val updatedAt = task["updatedAt"] as String
+                val firebaseId = dataSnapshot.key as String
+                if (MapHolder.mapIdToPosition.containsKey(firebaseId)) {
+                    val updateTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
+                    val position = MapHolder.mapIdToPosition[firebaseId] as Int
+                    taskList[position] = updateTask
+                    toDoListAdapter.notifyItemChanged(position)
+                }
 
-                // ...*/
+                // ...
             }
 
             override fun onChildRemoved(dataSnapshot: DataSnapshot) {

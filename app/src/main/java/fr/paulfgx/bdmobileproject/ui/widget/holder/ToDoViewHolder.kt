@@ -13,7 +13,7 @@ import kotlinx.android.synthetic.main.holder_todo.view.*
 
 class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(fragment: ITaskListener, task: Task, position: Int) {
+    fun bind(fragment: ITaskListener, task: Task) {
 
         itemView.apply {
             tv_nom.text = task.name
@@ -36,10 +36,10 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
                     container2.visibility = View.GONE
             }
             delete.setOnClickListener {
-                DeleteTaskWidget(fragment, task, position)
+                DeleteTaskWidget(fragment, task)
             }
             update.setOnClickListener {
-                UpdateTaskWidget(fragment, task, position)
+                UpdateTaskWidget(fragment, task)
             }
         }
     }
