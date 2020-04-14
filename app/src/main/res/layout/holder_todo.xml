@@ -92,7 +92,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:background="@color/color_surface"
-        android:visibility="visible"
+        android:visibility="gone"
         android:paddingVertical="2dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/container1">

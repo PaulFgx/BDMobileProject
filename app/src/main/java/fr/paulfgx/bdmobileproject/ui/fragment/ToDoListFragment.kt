@@ -82,6 +82,13 @@ class ToDoListFragment : Fragment(), ITaskListener {
         updateTaskInFirebase(task)
     }
 
+    private fun updateMapWithNewPositions() {
+        mapIdToPosition = mutableMapOf()
+        for (i in 0 until taskList.size) {
+            mapIdToPosition[taskList[i].firebaseId] = i
+        }
+    }
+
     private fun getPositionWithFirebaseId(id: String) = mapIdToPosition[id]
 
     //region Firebase Access
@@ -113,15 +120,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
         }
     }
 
-    private fun updateMapWithNewPositions() {
-        mapIdToPosition = mutableMapOf()
-        for (i in 0 until taskList.size) {
-            mapIdToPosition[taskList[i].firebaseId] = i
-        }
-    }
-
     private fun getDataFromFirebase() {
-
         // Get Data once when opening the application
         tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
@@ -140,8 +139,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     mapIdToPosition.put(firebaseId, mapIdToPosition.size)
                 }
+                progress_bar.visibility = View.GONE
                 toDoListAdapter.submitList(taskList)
-
                 observeChange()
             }
         })
