@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">BDMobileProject</string>
-    <string name="to_do">To Do</string>
+    <string name="to_do">TO DO LIST</string>
     <string name="oui">Oui</string>
     <string name="non">Non</string>
     <string name="save">Save</string>

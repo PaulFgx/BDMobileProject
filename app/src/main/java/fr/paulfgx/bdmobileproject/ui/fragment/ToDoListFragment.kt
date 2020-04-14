@@ -27,11 +27,8 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 class ToDoListFragment : Fragment(), ITaskListener {
 
     private val tasksRef = Firebase.database.reference.child("Tasks")
-    //var map = mutableMapOf<String, Int>()
-
-    private lateinit var toDoListAdapter: ToDoListAdapter
-
     private var taskList = mutableListOf<Task>()
+    private lateinit var toDoListAdapter: ToDoListAdapter
 
     companion object {
         private const val TAG = "ReadValue"
@@ -75,17 +72,17 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     override fun onRequestDeleteTask(task: Task, position: Int) {
-        deleteTaskInFirebase(task)
-        //taskList.removeAt(position)
-        //toDoListAdapter.submitList(taskList)
+        deleteTaskInFirebase(task, position)
     }
 
     override fun onRequestUpdateTask(task: Task, position: Int) {
-        updateTaskInFirebase(task)
+        updateTaskInFirebase(task, position)
     }
 
     override fun onCheckedChangeListener(task: Task) {
-        updateTaskInFirebase(task)
+        getPositionWithFirebaseId(task.firebaseId)?.let { position ->
+        updateTaskInFirebase(task, position)
+        }
     }
 
     //region Firebase Access
@@ -99,16 +96,26 @@ class ToDoListFragment : Fragment(), ITaskListener {
         toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
     }
 
-    private fun updateTaskInFirebase(task: Task) {
+    private fun updateTaskInFirebase(task: Task, position: Int) {
         task.updatedAt = getCurrentDateTime()
         tasksRef.child(task.firebaseId).setValue(task)
-        val position = MapHolder.mapIdToPosition[task.firebaseId] as Int
         taskList[position] = task
         toDoListAdapter.notifyItemChanged(position)
     }
 
-    private fun deleteTaskInFirebase(task: Task) {
-        tasksRef.child(task.firebaseId).removeValue();
+    private fun deleteTaskInFirebase(task: Task, position: Int) {
+        taskList.removeAt(position)
+        toDoListAdapter.notifyItemRemoved(position)
+        updateMapWithNewPositions()
+        tasksRef.child(task.firebaseId).removeValue()
+    }
+
+    private fun updateMapWithNewPositions() {
+        MapHolder.mapIdToPosition = mutableMapOf()
+        val size = MapHolder.mapIdToPosition.size
+        for (i in 0 until taskList.size) {
+            MapHolder.mapIdToPosition[taskList[i].firebaseId] = i
+        }
     }
 
     private fun getDataFromFirebase() {
@@ -144,7 +151,6 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
             override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
                 Log.d(TAG, "onChildAdded:" + dataSnapshot.key!!)
-                // A new task has been added, add it to the displayed list
                 val task = dataSnapshot.value as HashMap<*, *>
                 val name = task["name"] as String
                 val isChecked = task["selected"] as Boolean
@@ -161,7 +167,6 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
             override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
                 Log.d(TAG, "onChildChanged: ${dataSnapshot.key}")
-
                 val task = dataSnapshot.value as HashMap<*, *>
                 val name = task["name"] as String
                 val isChecked = task["selected"] as Boolean
@@ -174,37 +179,25 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     taskList[position] = updateTask
                     toDoListAdapter.notifyItemChanged(position)
                 }
-
-                // ...
             }
 
             override fun onChildRemoved(dataSnapshot: DataSnapshot) {
                 Log.d(TAG, "onChildRemoved:" + dataSnapshot.key!!)
-
-                // A comment has changed, use the key to determine if we are displaying this
-                // comment and if so remove it.
-                val commentKey = dataSnapshot.key
-
-                // ...
+                val firebaseId = dataSnapshot.key as String
+                if (MapHolder.mapIdToPosition.containsKey(firebaseId)) {
+                    val position = getPositionWithFirebaseId(firebaseId) as Int
+                    taskList.removeAt(position)
+                    toDoListAdapter.notifyItemRemoved(position)
+                    updateMapWithNewPositions()
+                }
             }
 
             override fun onChildMoved(dataSnapshot: DataSnapshot, previousChildName: String?) {
                 Log.d(TAG, "onChildMoved:" + dataSnapshot.key!!)
-
-                // A comment has changed position, use the key to determine if we are
-                // displaying this comment and if so move it.
-
-                // val movedComment = dataSnapshot.getValue<Comment>()
-                val commentKey = dataSnapshot.key
-
-                // ...
             }
 
             override fun onCancelled(databaseError: DatabaseError) {
                 Log.w(TAG, "postComments:onCancelled", databaseError.toException())
-
-                //Toast.makeText(context, "Failed to load comments.",
-                //  Toast.LENGTH_SHORT).show()
             }
         })
     }
