@@ -30,6 +30,7 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
                 fragment.onCheckedChangeListener(task)
             }
             container2.visibility = View.GONE
+            expand_action.setImageResource(R.drawable.ic_expand_more)
             expand_action.setOnClickListener {
                 if (container2.visibility == View.GONE) {
                     expand_action.setImageResource(R.drawable.ic_expand_less)
