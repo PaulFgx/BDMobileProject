@@ -91,7 +91,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
     //region Firebase Access
     private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
         var idTask = tasksRef.push().key!!
-        MapHolder.mapIdToPosition[idTask] = MapHolder.mapIdToPosition.size - 1
+        MapHolder.mapIdToPosition[idTask] = MapHolder.mapIdToPosition.size
         val currentTime = getCurrentDateTime()
         val task = Task(name, isSelected, currentTime, currentTime, idTask)
         tasksRef.child(idTask).setValue(task)
