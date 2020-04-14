@@ -6,5 +6,5 @@ data class Task(
     var name: String,
     var isSelected: Boolean,
     @set:Exclude @get:Exclude
-    var id: String = "Default"
+    var firebaseId: String
 )

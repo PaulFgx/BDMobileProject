@@ -38,7 +38,7 @@ class AddTaskWidget(
 
             btnOk.setOnClickListener {
                 if (editext.text.isNotBlank()) {
-                    fragment.onRequestAddingTask(Task(editext.text.toString(), false))
+                    fragment.onRequestAddingTask(editext.text.toString(), false)
                     alert.dismiss()
                     fragment.requireView().hideKeyboard()
                 }

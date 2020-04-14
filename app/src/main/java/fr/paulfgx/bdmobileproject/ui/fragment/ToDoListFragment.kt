@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -23,7 +24,7 @@ import kotlinx.android.synthetic.main.fragment_todolist.view.*
 class ToDoListFragment : Fragment(), ITaskListener {
 
     private val tasksRef = Firebase.database.reference.child("Tasks")
-    var maxId: Long = 0;
+    var map = mutableMapOf<String, Int>()
 
     private lateinit var toDoListAdapter: ToDoListAdapter
 
@@ -66,23 +67,20 @@ class ToDoListFragment : Fragment(), ITaskListener {
         getDataFromFirebase()
     }
 
-    override fun onRequestAddingTask(task: Task) {
-        task.id = "Task"+(maxId + 1)
-        writeNewTaskInFirebase(task)
-        taskList.add(task)
-        toDoListAdapter.submitList(taskList)
+    override fun onRequestAddingTask(name: String, isSelected: Boolean) {
+        writeNewTaskInFirebase(name, isSelected)
     }
 
     override fun onRequestDeleteTask(task: Task, position: Int) {
         deleteTaskInFirebase(task)
-        taskList.removeAt(position)
-        toDoListAdapter.submitList(taskList)
+        //taskList.removeAt(position)
+        //toDoListAdapter.submitList(taskList)
     }
 
     override fun onRequestUpdateTask(task: Task, position: Int) {
         updateTaskInFirebase(task)
-        taskList[position] = task
-        toDoListAdapter.submitList(taskList)
+        //taskList[position] = task
+        //toDoListAdapter.submitList(taskList)
     }
 
     override fun onCheckedChangeListener(task: Task) {
@@ -90,37 +88,101 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     //region Firebase Access
-    private fun writeNewTaskInFirebase(task: Task) {
-        tasksRef.child(task.id).setValue(task).addOnCompleteListener {
-            maxId++
-        }
+    private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
+        var idTask = tasksRef.push().key!!
+        map.put(idTask, map.size - 1)
+        val task = Task(name, isSelected, idTask)
+        tasksRef.child(idTask).setValue(task)
+        taskList.add(task)
+        toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
     }
 
     private fun updateTaskInFirebase(task: Task) {
-        tasksRef.child(task.id).setValue(task)
+        tasksRef.child(task.firebaseId).setValue(task)
     }
 
-    private fun  deleteTaskInFirebase(task: Task) {
-        tasksRef.child(task.id).removeValue();
+    private fun deleteTaskInFirebase(task: Task) {
+        tasksRef.child(task.firebaseId).removeValue();
     }
 
     private fun getDataFromFirebase() {
+
         tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
                 Log.d("FirebaseError", error.message)
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                maxId = dataSnapshot.childrenCount
-                val taskMap = dataSnapshot.value as? HashMap<Any,Any>
+                val taskMap = dataSnapshot.value as? HashMap<Any, Any>
                 taskMap?.map { entry ->
-                    val task = entry.value as HashMap<Any,Any>
-                    val id = entry.key as String
+                    val task = entry.value as HashMap<Any, Any>
+                    val firebaseId = entry.key as String
                     val name = task["name"] as String
                     val isChecked = task["selected"] as Boolean
-                    taskList.add(Task(name, isChecked, id))
+                    taskList.add(Task(name, isChecked, firebaseId))
+                    map.put(firebaseId, map.size - 1)
                 }
                 toDoListAdapter.submitList(taskList)
+
+                observeChange()
+            }
+        })
+    }
+
+    private fun observeChange() {
+        tasksRef.addChildEventListener(object : ChildEventListener {
+
+            override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
+                Log.d(TAG, "onChildAdded:" + dataSnapshot.key!!)
+                // A new task has been added, add it to the displayed list
+                val task = dataSnapshot.value as HashMap<Any, Any>
+                val name = task["name"] as String
+                val isChecked = task["selected"] as Boolean
+                val firebaseId = dataSnapshot.key
+                if (!map.containsKey(firebaseId)) {
+                    taskList.add(Task(name, isChecked, firebaseId!!))
+                    toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
+                }
+            }
+
+            override fun onChildChanged(dataSnapshot: DataSnapshot, previousChildName: String?) {
+                /*Log.d(TAG, "onChildChanged: ${dataSnapshot.key}")
+
+                // A comment has changed, use the key to determine if we are displaying this
+                // comment and if so displayed the changed comment.
+                val newComment = dataSnapshot.getValue<Comment>()
+                val commentKey = dataSnapshot.key
+
+                // ...*/
+            }
+
+            override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+                Log.d(TAG, "onChildRemoved:" + dataSnapshot.key!!)
+
+                // A comment has changed, use the key to determine if we are displaying this
+                // comment and if so remove it.
+                val commentKey = dataSnapshot.key
+
+                // ...
+            }
+
+            override fun onChildMoved(dataSnapshot: DataSnapshot, previousChildName: String?) {
+                Log.d(TAG, "onChildMoved:" + dataSnapshot.key!!)
+
+                // A comment has changed position, use the key to determine if we are
+                // displaying this comment and if so move it.
+
+                // val movedComment = dataSnapshot.getValue<Comment>()
+                val commentKey = dataSnapshot.key
+
+                // ...
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Log.w(TAG, "postComments:onCancelled", databaseError.toException())
+
+                //Toast.makeText(context, "Failed to load comments.",
+                //  Toast.LENGTH_SHORT).show()
             }
         })
     }
