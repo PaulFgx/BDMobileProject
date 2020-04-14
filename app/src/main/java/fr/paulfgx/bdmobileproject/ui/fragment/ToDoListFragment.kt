@@ -1,10 +1,11 @@
 package fr.paulfgx.bdmobileproject.ui.fragment
 
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
@@ -35,6 +36,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
         tasksRef.keepSynced(true)
     }
 
@@ -64,6 +66,31 @@ class ToDoListFragment : Fragment(), ITaskListener {
         }
 
         getDataFromFirebase()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.sort_menu, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            /**
+             * Handling toolbar submenu item click here
+             */
+            R.id.item_name -> {
+                //
+            }
+            R.id.item_created_at -> {
+                //
+            }
+            R.id.item_created_at -> {
+                //
+            }
+            R.id.item_checked -> {
+                //
+            }
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     override fun onRequestAddingTask(name: String, isSelected: Boolean) {

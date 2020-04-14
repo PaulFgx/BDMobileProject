@@ -5,4 +5,9 @@
     <string name="non">Non</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
+    <string name="sort_menu_text">Sort</string>
+    <string name="filter_by_name">Name</string>
+    <string name="filter_by_created">Created At</string>
+    <string name="filter_by_updated">Updated At</string>
+    <string name="filter_by_checked">Checked</string>
 </resources>

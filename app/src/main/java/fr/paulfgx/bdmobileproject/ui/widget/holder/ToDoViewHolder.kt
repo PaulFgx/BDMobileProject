@@ -31,10 +31,14 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
             }
             container2.visibility = View.GONE
             expand_action.setOnClickListener {
-                if (container2.visibility == View.GONE)
+                if (container2.visibility == View.GONE) {
+                    expand_action.setImageResource(R.drawable.ic_expand_less)
                     container2.visibility = View.VISIBLE
-                else
+                }
+                else {
                     container2.visibility = View.GONE
+                    expand_action.setImageResource(R.drawable.ic_expand_more)
+                }
             }
             delete.setOnClickListener {
                 DeleteTaskWidget(fragment, task)
