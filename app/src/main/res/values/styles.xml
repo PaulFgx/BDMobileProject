@@ -7,6 +7,8 @@
         <item name="colorPrimaryDark">@color/color_primary_variant</item>
         <item name="colorAccent">@color/color_accent</item>
     </style>
-
+    <style name="BottomViewStyle">
+        <item name="android:background">@drawable/gradient</item>
+    </style>
 </resources>
 
