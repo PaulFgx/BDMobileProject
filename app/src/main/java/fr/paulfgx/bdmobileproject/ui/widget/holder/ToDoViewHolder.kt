@@ -23,6 +23,7 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
             setOnClickListener {
                 task.isSelected = !task.isSelected
                 checkbox.isChecked = task.isSelected
+                fragment.onCheckedChangeListener(task)
             }
             checkbox.setOnClickListener {
                 task.isSelected = itemView.checkbox.isChecked

@@ -15,6 +15,7 @@ import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.data.singletons.MapHolder
+import fr.paulfgx.bdmobileproject.data.singletons.getPositionWithFirebaseId
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
@@ -99,6 +100,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     private fun updateTaskInFirebase(task: Task) {
+        task.updatedAt = getCurrentDateTime()
         tasksRef.child(task.firebaseId).setValue(task)
         val position = MapHolder.mapIdToPosition[task.firebaseId] as Int
         taskList[position] = task
@@ -151,7 +153,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val firebaseId = dataSnapshot.key as String
                 if (!MapHolder.mapIdToPosition.containsKey(firebaseId)) {
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
-                    toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
+                    val position = MapHolder.mapIdToPosition.size
+                    MapHolder.mapIdToPosition[firebaseId] = position
+                    toDoListAdapter.notifyItemInserted(position)
                 }
             }
 
