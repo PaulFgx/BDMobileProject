@@ -8,8 +8,6 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
-import fr.paulfgx.bdmobileproject.data.singletons.MapHolder
-import fr.paulfgx.bdmobileproject.data.singletons.getPositionWithFirebaseId
 
 class DeleteTaskWidget(
     private val fragment: ITaskListener,
@@ -42,9 +40,7 @@ class DeleteTaskWidget(
             alert.show()
 
             btnOk.setOnClickListener {
-                getPositionWithFirebaseId(task.firebaseId)?.let { position ->
-                    fragment.onRequestDeleteTask(task, position)
-                }
+                fragment.onRequestDeleteTask(task)
                 alert.dismiss()
             }
             btnCancel.setOnClickListener {

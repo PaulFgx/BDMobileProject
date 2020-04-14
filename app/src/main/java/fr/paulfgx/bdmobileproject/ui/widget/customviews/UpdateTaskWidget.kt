@@ -8,8 +8,6 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
-import fr.paulfgx.bdmobileproject.data.singletons.MapHolder
-import fr.paulfgx.bdmobileproject.data.singletons.getPositionWithFirebaseId
 import fr.paulfgx.bdmobileproject.ui.utils.hideKeyboard
 
 class UpdateTaskWidget(
@@ -43,12 +41,8 @@ class UpdateTaskWidget(
 
             btnOk.setOnClickListener {
                 if (editext.text.isNotBlank()) {
-                    val temp = MapHolder.mapIdToPosition
-                    getPositionWithFirebaseId(task.firebaseId)?.let { position ->
-                        task.name = editext.text.toString()
-                        fragment.onRequestUpdateTask(task, position)
-                    }
-
+                    task.name = editext.text.toString()
+                    fragment.onRequestUpdateTask(task)
                     alert.dismiss()
                     fragment.requireView().hideKeyboard()
                 }
