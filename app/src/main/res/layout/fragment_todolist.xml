@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.fragment.ToDoListFragment">
+    tools:context=".ui.fragment.ToDoListFragment"
+    android:id="@+id/fragment_main_layout">
 
     <androidx.recyclerview.widget.RecyclerView
         android:paddingVertical="4dp"

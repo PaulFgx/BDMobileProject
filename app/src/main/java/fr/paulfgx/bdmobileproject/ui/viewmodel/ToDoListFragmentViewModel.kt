@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import fr.paulfgx.bdmobileproject.data.model.Task
+import fr.paulfgx.bdmobileproject.ui.utils.unAccent
 import kotlinx.coroutines.launch
 
 open class ToDoListFragmentViewModel(
@@ -36,6 +37,14 @@ open class ToDoListFragmentViewModel(
     fun sortByChecked(listTask: MutableList<Task>, onSuccess: OnSuccess<MutableList<Task>>) {
         viewModelScope.launch {
             listTask.sortedByDescending { it.isSelected }
+                .toMutableList()
+                .run(onSuccess)
+        }
+    }
+
+    fun searchWith(listTask: MutableList<Task>, searchValue: String, onSuccess: OnSuccess<MutableList<Task>>) {
+        viewModelScope.launch {
+            listTask.filter { it.name.contains(searchValue.unAccent(), ignoreCase = true) }
                 .toMutableList()
                 .run(onSuccess)
         }

@@ -6,6 +6,7 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="sort_menu_text">Sort</string>
+    <string name="search_menu_text">Search</string>
     <string name="filter_by_name">Name</string>
     <string name="filter_by_created">Created At</string>
     <string name="filter_by_updated">Updated At</string>

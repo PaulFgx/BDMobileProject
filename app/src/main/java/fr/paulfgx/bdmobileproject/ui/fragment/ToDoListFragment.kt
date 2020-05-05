@@ -1,8 +1,11 @@
 package fr.paulfgx.bdmobileproject.ui.fragment
 
+import android.app.SearchManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.*
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
@@ -18,6 +21,8 @@ import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
+import fr.paulfgx.bdmobileproject.ui.utils.hideKeyboard
+import fr.paulfgx.bdmobileproject.ui.utils.unAccent
 import fr.paulfgx.bdmobileproject.ui.viewmodel.ToDoListFragmentViewModel
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.AddTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
@@ -25,11 +30,14 @@ import kotlinx.android.synthetic.main.fragment_todolist.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
+    private var staticTaskList = listOf<Task>()
+
     private lateinit var viewModel: ToDoListFragmentViewModel
     private var mapIdToPosition = mutableMapOf<String, Int>()
     private val tasksRef = Firebase.database.reference.child("Tasks")
     private var taskList = mutableListOf<Task>()
     private lateinit var toDoListAdapter: ToDoListAdapter
+    private lateinit var searchView: SearchView
 
     companion object {
         private const val TAG = "ReadValue"
@@ -56,6 +64,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             this.setTitle(R.string.to_do)
             this.setDisplayHomeAsUpEnabled(false)
         }
+
         manageAdapterAndRecyclerView()
         manageFabVisibility()
         createFabClickListener()
@@ -64,6 +73,35 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.sort_menu, menu)
+
+        val manager = requireActivity().getSystemService(Context.SEARCH_SERVICE) as SearchManager
+
+        val searchItem = menu.findItem(R.id.search_item)
+        val searchView = searchItem.actionView as SearchView
+        this.searchView = searchView
+
+        searchView.setSearchableInfo(manager.getSearchableInfo(activity?.componentName))
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(newText: String): Boolean {
+                var list = staticTaskList.toMutableList()
+                viewModel.searchWith(list, newText) {
+                    taskList = it
+                    updateMapWithNewPositions()
+                    toDoListAdapter.submitList(taskList)
+                }
+                return true
+            }
+
+            override fun onQueryTextSubmit(query: String): Boolean {
+                fragment_main_layout.hideKeyboard()
+                return true
+            }
+        })
+        searchView.setOnCloseListener {
+            fragment_main_layout.hideKeyboard()
+            getDataFromFirebase()
+            return@setOnCloseListener false
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -194,6 +232,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
+                taskList = mutableListOf()
                 val taskMap = dataSnapshot.value as? HashMap<*, *>
                 taskMap?.map { entry ->
                     val task = entry.value as HashMap<*, *>
@@ -205,6 +244,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     mapIdToPosition.put(firebaseId, mapIdToPosition.size)
                 }
+                staticTaskList = taskList
                 progress_bar.visibility = View.GONE
                 toDoListAdapter.submitList(taskList)
                 observeChange()

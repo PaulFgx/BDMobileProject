@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/search_item"
+        android:icon="@drawable/ic_search_black"
+        android:title="@string/search_menu_text"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom" />
+    <item
         android:id="@+id/sort_item"
         android:icon="@drawable/ic_sort_black"
         android:title="@string/sort_menu_text"

@@ -15,7 +15,7 @@ class ToDoListAdapter(
 
     private var _data = emptyList<Task>()
 
-    public var expendedPosition = -1;
+    var expendedPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ToDoViewHolder {
         return ToDoViewHolder.newInstance(parent)
@@ -31,7 +31,9 @@ class ToDoListAdapter(
      * Set new data in the list and refresh it
      */
     fun submitList(data: List<Task>) {
+
         _data = data
+        expendedPosition = -1
         notifyDataSetChanged()
     }
 
