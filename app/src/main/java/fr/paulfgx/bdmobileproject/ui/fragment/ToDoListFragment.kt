@@ -236,14 +236,21 @@ class ToDoListFragment : Fragment(), ITaskListener {
     private fun deleteTaskInFirebase(task: Task) {
         if (mapIdToPosition.containsKey(task.firebaseId)) {
             val position = mapIdToPosition[task.firebaseId]
-            try { taskList.removeAt(position!!) } catch (e: Exception) {}
+            try {
+                taskList.removeAt(position!!)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
             toDoListAdapter.notifyDataSetChanged()
             toDoListAdapter.expendedPosition = -1
             tasksRef.child(task.firebaseId).removeValue()
         }
         if (completeMapIdToPosition.containsKey(task.firebaseId)) {
             val position = completeMapIdToPosition[task.firebaseId]
-            try { completeTaskList.removeAt(position!!) } catch (e: Exception) {}
+            try {
+                completeTaskList.removeAt(position!!)
+            } catch (e: Exception) {
+            }
         }
         updateMapWithNewPositions()
     }
@@ -294,7 +301,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     viewModel.matchCurrentSearch(name, currentSearch) {
                         if (it) {
                             taskList.add(newTask)
-                            val position = mapIdToPosition.size
+                            val position = taskList.size - 1
                             mapIdToPosition[firebaseId] = position
                             toDoListAdapter.notifyItemInserted(position)
                         }
@@ -302,7 +309,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 }
                 if (!completeMapIdToPosition.containsKey(firebaseId)) {
                     completeTaskList.add(newTask)
-                    val position = completeMapIdToPosition.size
+                    val position = completeTaskList.size - 1
                     completeMapIdToPosition[firebaseId] = position
                 }
                 fab.show()
@@ -321,12 +328,20 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     val position = mapIdToPosition[firebaseId] as Int
                     val isExpanded = taskList[position].isExpanded
                     updateTask.isExpanded = isExpanded
-                    position?.run { taskList[position] = updateTask }
+                    try {
+                        taskList[position] = updateTask
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                     toDoListAdapter.notifyItemChanged(position)
                 }
                 if (completeMapIdToPosition.containsKey(firebaseId)) {
                     val position = completeMapIdToPosition[firebaseId]
-                    position?.run { completeTaskList[position] = updateTask }
+                    try {
+                        completeTaskList[position!!] = updateTask
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                 }
                 fab.show()
             }
@@ -336,13 +351,21 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val firebaseId = dataSnapshot.key as String
                 if (mapIdToPosition.containsKey(firebaseId)) {
                     val position = getPositionWithFirebaseId(firebaseId) as Int
-                    taskList.removeAt(position)
+                    try {
+                        taskList.removeAt(position)
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                     toDoListAdapter.notifyDataSetChanged()
                     updateMapWithNewPositions()
                 }
                 if (completeMapIdToPosition.containsKey(firebaseId)) {
                     val position = completeMapIdToPosition[firebaseId] as Int
-                    completeTaskList.removeAt(position)
+                    try {
+                        completeTaskList.removeAt(position)
+                    } catch (e: java.lang.Exception) {
+                        e.printStackTrace()
+                    }
                 }
                 fab.show()
             }
