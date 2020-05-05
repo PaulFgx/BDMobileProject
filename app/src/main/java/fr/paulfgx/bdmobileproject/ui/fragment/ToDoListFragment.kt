@@ -87,13 +87,12 @@ class ToDoListFragment : Fragment(), ITaskListener {
         searchView.setSearchableInfo(manager.getSearchableInfo(activity?.componentName))
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
+                reinitExpanded()
                 currentSearch = newText
                 var list = completeTaskList.toMutableList()
                 viewModel.searchWith(list, newText) {
                     taskList = it
                     updateMapWithNewPositions()
-                    if (toDoListAdapter.expendedPosition != -1)
-                        taskList[toDoListAdapter.expendedPosition].isExpanded = false
                     toDoListAdapter.submitList(taskList)
                 }
                 return true
@@ -169,6 +168,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
         }
         taskList[newPosition].isExpanded = true
         toDoListAdapter.notifyItemChanged(newPosition)
+    }
+    
+    private fun reinitExpanded(){
+        if (toDoListAdapter.expendedPosition != -1 && toDoListAdapter.expendedPosition < taskList.size)
+            taskList[toDoListAdapter.expendedPosition].isExpanded = false
     }
 
     private fun createFabClickListener() {
