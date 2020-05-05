@@ -4,41 +4,46 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import fr.paulfgx.bdmobileproject.data.model.Task
+import fr.paulfgx.bdmobileproject.data.singleton.VarGlobal
+import fr.paulfgx.bdmobileproject.ui.fragment.ToDoListFragment
 import fr.paulfgx.bdmobileproject.ui.utils.unAccent
 import kotlinx.coroutines.launch
 
 open class ToDoListFragmentViewModel(
 ) : ViewModel() {
 
-    fun sortByName(listTask: MutableList<Task>, onSuccess: OnSuccess<MutableList<Task>>) {
+    fun sortByName(onFinish: OnFinish) {
         viewModelScope.launch {
-            listTask.sortedBy { it.name }
+            reinitList()
+            VarGlobal.taskList.sortedBy { it.name }
                 .toMutableList()
-                .run(onSuccess)
+            onFinish()
         }
     }
 
-    fun sortByCreatedAt(listTask: MutableList<Task>, onSuccess: OnSuccess<MutableList<Task>>) {
+    fun sortByCreatedAt(onFinish: OnFinish) {
         viewModelScope.launch {
-            listTask.sortedByDescending { it.createdAt }
+            reinitList()
+            VarGlobal.taskList.sortedByDescending { it.createdAt }
                 .toMutableList()
-                .run(onSuccess)
+            onFinish()
         }
     }
 
-    fun sortByUpdatedAt(listTask: MutableList<Task>, onSuccess: OnSuccess<MutableList<Task>>) {
+    fun sortByUpdatedAt(onFinish: OnFinish) {
         viewModelScope.launch {
-            listTask.sortedByDescending { it.updatedAt }
+            reinitList()
+            VarGlobal.taskList.sortedByDescending { it.updatedAt }
                 .toMutableList()
-                .run(onSuccess)
+            onFinish()
         }
     }
 
-    fun sortByChecked(listTask: MutableList<Task>, onSuccess: OnSuccess<MutableList<Task>>) {
+    fun sortByChecked(onFinish: OnFinish) {
         viewModelScope.launch {
-            listTask.sortedByDescending { it.isSelected }
+            VarGlobal.taskList.sortedByDescending { it.isSelected }
                 .toMutableList()
-                .run(onSuccess)
+            onFinish()
         }
     }
 
@@ -48,6 +53,10 @@ open class ToDoListFragmentViewModel(
                 .toMutableList()
                 .run(onSuccess)
         }
+    }
+
+    private fun reinitList() {
+        VarGlobal.taskList = VarGlobal.completeTaskList.toMutableList()
     }
 
     companion object Factory : ViewModelProvider.Factory {

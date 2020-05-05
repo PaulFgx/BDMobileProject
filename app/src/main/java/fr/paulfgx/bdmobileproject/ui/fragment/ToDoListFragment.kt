@@ -18,6 +18,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
+import fr.paulfgx.bdmobileproject.data.singleton.VarGlobal
 import fr.paulfgx.bdmobileproject.ui.activity.MainActivity
 import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
@@ -31,12 +32,6 @@ import kotlinx.android.synthetic.main.fragment_todolist.*
 class ToDoListFragment : Fragment(), ITaskListener {
 
     private val tasksRef = Firebase.database.reference.child("Tasks")
-
-    private var completeTaskList = mutableListOf<Task>()
-    private var completeMapIdToPosition = mutableMapOf<String, Int>()
-
-    private var taskList = mutableListOf<Task>()
-    private var mapIdToPosition = mutableMapOf<String, Int>()
 
     private lateinit var viewModel: ToDoListFragmentViewModel
     private lateinit var toDoListAdapter: ToDoListAdapter
@@ -89,11 +84,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
             override fun onQueryTextChange(newText: String): Boolean {
                 reinitExpanded()
                 currentSearch = newText
-                var list = completeTaskList.toMutableList()
+                var list = VarGlobal.completeTaskList.toMutableList()
                 viewModel.searchWith(list, newText) {
-                    taskList = it.toMutableList()
+                    VarGlobal.taskList = it.toMutableList()
                     updateMapWithNewPositions()
-                    toDoListAdapter.submitList(taskList)
+                    toDoListAdapter.submitList(VarGlobal.taskList)
                 }
                 fab.show()
                 return true
@@ -107,8 +102,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
         searchView.setOnCloseListener {
             currentSearch = ""
             fragment_main_layout.hideKeyboard()
-            taskList = completeTaskList.toMutableList()
-            toDoListAdapter.submitList(taskList)
+            VarGlobal.taskList = VarGlobal.completeTaskList.toMutableList()
+            toDoListAdapter.submitList(VarGlobal.taskList)
             return@setOnCloseListener false
         }
     }
@@ -116,32 +111,16 @@ class ToDoListFragment : Fragment(), ITaskListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.item_name -> {
-                viewModel.sortByName(taskList) { res ->
-                    taskList = res
-                    updateMapWithNewPositions()
-                    toDoListAdapter.submitList(taskList)
-                }
+                viewModel.sortByName { refreshAdapter() }
             }
             R.id.item_created_at -> {
-                viewModel.sortByCreatedAt(taskList) { res ->
-                    taskList = res
-                    updateMapWithNewPositions()
-                    toDoListAdapter.submitList(taskList)
-                }
+                viewModel.sortByCreatedAt { refreshAdapter() }
             }
             R.id.item_updated_at -> {
-                viewModel.sortByUpdatedAt(taskList) { res ->
-                    taskList = res
-                    updateMapWithNewPositions()
-                    toDoListAdapter.submitList(taskList)
-                }
+                viewModel.sortByUpdatedAt { refreshAdapter() }
             }
             R.id.item_checked -> {
-                viewModel.sortByChecked(taskList) { res ->
-                    taskList = res
-                    updateMapWithNewPositions()
-                    toDoListAdapter.submitList(taskList)
-                }
+                viewModel.sortByChecked { refreshAdapter() }
             }
         }
         return super.onOptionsItemSelected(item)
@@ -165,16 +144,21 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     override fun onExpandedChangeListener(newPosition: Int, oldPosition: Int) {
         if (oldPosition != -1) {
-            taskList[oldPosition].isExpanded = false
+            VarGlobal.taskList[oldPosition].isExpanded = false
             toDoListAdapter.notifyItemChanged(oldPosition)
         }
-        taskList[newPosition].isExpanded = true
+        VarGlobal.taskList[newPosition].isExpanded = true
         toDoListAdapter.notifyItemChanged(newPosition)
     }
 
+    fun refreshAdapter() {
+        updateMapWithNewPositions()
+        toDoListAdapter.submitList(VarGlobal.taskList)
+    }
+
     private fun reinitExpanded() {
-        if (toDoListAdapter.expendedPosition != -1 && toDoListAdapter.expendedPosition < taskList.size)
-            taskList[toDoListAdapter.expendedPosition].isExpanded = false
+        if (toDoListAdapter.expendedPosition != -1 && toDoListAdapter.expendedPosition < VarGlobal.taskList.size)
+            VarGlobal.taskList[toDoListAdapter.expendedPosition].isExpanded = false
     }
 
     private fun createFabClickListener() {
@@ -200,17 +184,17 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     private fun updateMapWithNewPositions() {
-        mapIdToPosition = mutableMapOf()
-        for (i in 0 until taskList.size) {
-            mapIdToPosition[taskList[i].firebaseId] = i
+        VarGlobal.mapIdToPosition = mutableMapOf()
+        for (i in 0 until VarGlobal.taskList.size) {
+            VarGlobal.mapIdToPosition[VarGlobal.taskList[i].firebaseId] = i
         }
-        completeMapIdToPosition = mutableMapOf()
-        for (i in 0 until completeTaskList.size) {
-            completeMapIdToPosition[completeTaskList[i].firebaseId] = i
+        VarGlobal.completeMapIdToPosition = mutableMapOf()
+        for (i in 0 until VarGlobal.completeTaskList.size) {
+            VarGlobal.completeMapIdToPosition[VarGlobal.completeTaskList[i].firebaseId] = i
         }
     }
 
-    private fun getPositionWithFirebaseId(id: String) = mapIdToPosition[id]
+    private fun getPositionWithFirebaseId(id: String) = VarGlobal.mapIdToPosition[id]
 
     //region Firebase Access
     private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
@@ -218,11 +202,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
         val currentTime = getCurrentDateTime()
         val task = Task(name, isSelected, currentTime, currentTime, idTask)
         if (currentSearch == "" || task.matches(currentSearch))
-            taskList.add(task)
-        completeTaskList.add(task)
+            VarGlobal.taskList.add(task)
+        VarGlobal.completeTaskList.add(task)
         toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
-        mapIdToPosition[idTask] = taskList.size - 1
-        completeMapIdToPosition[idTask] = completeTaskList.size - 1
+        VarGlobal.mapIdToPosition[idTask] = VarGlobal.taskList.size - 1
+        VarGlobal.completeMapIdToPosition[idTask] = VarGlobal.completeTaskList.size - 1
         tasksRef.child(idTask).setValue(task)
     }
 
@@ -230,16 +214,16 @@ class ToDoListFragment : Fragment(), ITaskListener {
         getPositionWithFirebaseId(task.firebaseId)?.let { position ->
             task.updatedAt = getCurrentDateTime()
             tasksRef.child(task.firebaseId).setValue(task)
-            taskList[position] = task
+            VarGlobal.taskList[position] = task
             toDoListAdapter.notifyItemChanged(position)
         }
     }
 
     private fun deleteTaskInFirebase(task: Task) {
-        if (mapIdToPosition.containsKey(task.firebaseId)) {
-            val position = mapIdToPosition[task.firebaseId]
+        if (VarGlobal.mapIdToPosition.containsKey(task.firebaseId)) {
+            val position = VarGlobal.mapIdToPosition[task.firebaseId]
             try {
-                taskList.removeAt(position!!)
+                VarGlobal.taskList.removeAt(position!!)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -247,10 +231,10 @@ class ToDoListFragment : Fragment(), ITaskListener {
             toDoListAdapter.expendedPosition = -1
             tasksRef.child(task.firebaseId).removeValue()
         }
-        if (completeMapIdToPosition.containsKey(task.firebaseId)) {
-            val position = completeMapIdToPosition[task.firebaseId]
+        if (VarGlobal.completeMapIdToPosition.containsKey(task.firebaseId)) {
+            val position = VarGlobal.completeMapIdToPosition[task.firebaseId]
             try {
-                completeTaskList.removeAt(position!!)
+                VarGlobal.completeTaskList.removeAt(position!!)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -266,7 +250,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
 
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                taskList = mutableListOf()
+                VarGlobal.taskList = mutableListOf()
                 val taskMap = dataSnapshot.value as? HashMap<*, *>
                 taskMap?.map { entry ->
                     val task = entry.value as HashMap<*, *>
@@ -275,13 +259,13 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     val isChecked = task["selected"] as Boolean
                     val createdAt = task["createdAt"] as String
                     val updatedAt = task["updatedAt"] as String
-                    taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
-                    completeTaskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
-                    mapIdToPosition.put(firebaseId, mapIdToPosition.size)
+                    VarGlobal.taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
+                    VarGlobal.completeTaskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
+                    VarGlobal.mapIdToPosition.put(firebaseId, VarGlobal.mapIdToPosition.size)
                 }
-                completeMapIdToPosition = mapIdToPosition
+                VarGlobal.completeMapIdToPosition = VarGlobal.mapIdToPosition
                 progress_bar.visibility = View.GONE
-                toDoListAdapter.submitList(taskList)
+                toDoListAdapter.submitList(VarGlobal.taskList)
                 observeChange()
             }
         })
@@ -300,16 +284,16 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
                 val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
-                if (!mapIdToPosition.containsKey(firebaseId) && newTask.matches(currentSearch)) {
-                    taskList.add(newTask)
-                    val position = taskList.size - 1
-                    mapIdToPosition[firebaseId] = position
+                if (!VarGlobal.mapIdToPosition.containsKey(firebaseId) && newTask.matches(currentSearch)) {
+                    VarGlobal.taskList.add(newTask)
+                    val position = VarGlobal.taskList.size - 1
+                    VarGlobal.mapIdToPosition[firebaseId] = position
                     toDoListAdapter.notifyItemInserted(position)
                 }
-                if (!completeMapIdToPosition.containsKey(firebaseId)) {
-                    completeTaskList.add(newTask)
-                    val position = completeTaskList.size - 1
-                    completeMapIdToPosition[firebaseId] = position
+                if (!VarGlobal.completeMapIdToPosition.containsKey(firebaseId)) {
+                    VarGlobal.completeTaskList.add(newTask)
+                    val position = VarGlobal.completeTaskList.size - 1
+                    VarGlobal.completeMapIdToPosition[firebaseId] = position
                 }
                 fab.show()
             }
@@ -323,21 +307,21 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
                 val updateTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
-                if (mapIdToPosition.containsKey(firebaseId)) {
-                    val position = mapIdToPosition[firebaseId] as Int
-                    val isExpanded = taskList[position].isExpanded
+                if (VarGlobal.mapIdToPosition.containsKey(firebaseId)) {
+                    val position = VarGlobal.mapIdToPosition[firebaseId] as Int
+                    val isExpanded = VarGlobal.taskList[position].isExpanded
                     updateTask.isExpanded = isExpanded
                     try {
-                        taskList[position] = updateTask
+                        VarGlobal.taskList[position] = updateTask
                     } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                     }
                     toDoListAdapter.notifyItemChanged(position)
                 }
-                if (completeMapIdToPosition.containsKey(firebaseId)) {
-                    val position = completeMapIdToPosition[firebaseId]
+                if (VarGlobal.completeMapIdToPosition.containsKey(firebaseId)) {
+                    val position = VarGlobal.completeMapIdToPosition[firebaseId]
                     try {
-                        completeTaskList[position!!] = updateTask
+                        VarGlobal.completeTaskList[position!!] = updateTask
                     } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                     }
@@ -348,20 +332,20 @@ class ToDoListFragment : Fragment(), ITaskListener {
             override fun onChildRemoved(dataSnapshot: DataSnapshot) {
                 Log.d(TAG, "onChildRemoved:" + dataSnapshot.key!!)
                 val firebaseId = dataSnapshot.key as String
-                if (mapIdToPosition.containsKey(firebaseId)) {
+                if (VarGlobal.mapIdToPosition.containsKey(firebaseId)) {
                     val position = getPositionWithFirebaseId(firebaseId) as Int
                     try {
-                        taskList.removeAt(position)
+                        VarGlobal.taskList.removeAt(position)
                     } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                     }
                     toDoListAdapter.notifyDataSetChanged()
                     updateMapWithNewPositions()
                 }
-                if (completeMapIdToPosition.containsKey(firebaseId)) {
-                    val position = completeMapIdToPosition[firebaseId] as Int
+                if (VarGlobal.completeMapIdToPosition.containsKey(firebaseId)) {
+                    val position = VarGlobal.completeMapIdToPosition[firebaseId] as Int
                     try {
-                        completeTaskList.removeAt(position)
+                        VarGlobal.completeTaskList.removeAt(position)
                     } catch (e: java.lang.Exception) {
                         e.printStackTrace()
                     }
