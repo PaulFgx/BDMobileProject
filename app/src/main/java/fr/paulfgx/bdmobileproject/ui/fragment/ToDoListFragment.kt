@@ -105,6 +105,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
         })
         searchView.setOnCloseListener {
+            currentSearch = ""
             fragment_main_layout.hideKeyboard()
             taskList = completeTaskList.toMutableList()
             toDoListAdapter.submitList(taskList)
@@ -214,14 +215,15 @@ class ToDoListFragment : Fragment(), ITaskListener {
     //region Firebase Access
     private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
         var idTask = tasksRef.push().key!!
-        mapIdToPosition[idTask] = mapIdToPosition.size
-        completeMapIdToPosition[idTask] = completeMapIdToPosition.size
         val currentTime = getCurrentDateTime()
         val task = Task(name, isSelected, currentTime, currentTime, idTask)
-        tasksRef.child(idTask).setValue(task)
-        taskList.add(task)
+        if (currentSearch == "" || task.matches(currentSearch))
+            taskList.add(task)
         completeTaskList.add(task)
         toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
+        mapIdToPosition[idTask] = taskList.size - 1
+        completeMapIdToPosition[idTask] = completeTaskList.size - 1
+        tasksRef.child(idTask).setValue(task)
     }
 
     private fun updateTaskInFirebase(task: Task) {
@@ -250,6 +252,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             try {
                 completeTaskList.removeAt(position!!)
             } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
         updateMapWithNewPositions()
@@ -297,15 +300,11 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
                 val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
-                if (!mapIdToPosition.containsKey(firebaseId)) {
-                    viewModel.matchCurrentSearch(name, currentSearch) {
-                        if (it) {
-                            taskList.add(newTask)
-                            val position = taskList.size - 1
-                            mapIdToPosition[firebaseId] = position
-                            toDoListAdapter.notifyItemInserted(position)
-                        }
-                    }
+                if (!mapIdToPosition.containsKey(firebaseId) && newTask.matches(currentSearch)) {
+                    taskList.add(newTask)
+                    val position = taskList.size - 1
+                    mapIdToPosition[firebaseId] = position
+                    toDoListAdapter.notifyItemInserted(position)
                 }
                 if (!completeMapIdToPosition.containsKey(firebaseId)) {
                     completeTaskList.add(newTask)
