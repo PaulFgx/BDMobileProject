@@ -179,7 +179,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
     private fun deleteTaskInFirebase(task: Task) {
         getPositionWithFirebaseId(task.firebaseId)?.let { position ->
             taskList.removeAt(position)
-            toDoListAdapter.notifyItemRemoved(position)
+            toDoListAdapter.notifyDataSetChanged()
+            toDoListAdapter.expendedPosition = -1
             updateMapWithNewPositions()
             tasksRef.child(task.firebaseId).removeValue()
         }
@@ -255,7 +256,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 if (mapIdToPosition.containsKey(firebaseId)) {
                     val position = getPositionWithFirebaseId(firebaseId) as Int
                     taskList.removeAt(position)
-                    toDoListAdapter.notifyItemRemoved(position)
+                    toDoListAdapter.notifyDataSetChanged()
                     updateMapWithNewPositions()
                 }
             }
