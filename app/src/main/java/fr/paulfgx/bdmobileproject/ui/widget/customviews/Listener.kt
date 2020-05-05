@@ -7,4 +7,5 @@ interface ITaskListener {
     fun onRequestUpdateTask(task: Task)
     fun onRequestDeleteTask(task: Task)
     fun onCheckedChangeListener(task: Task)
+    fun onExpandedChangeListener(newPosition: Int, oldPosition: Int)
 }

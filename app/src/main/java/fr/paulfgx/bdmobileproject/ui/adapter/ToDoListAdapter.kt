@@ -15,6 +15,8 @@ class ToDoListAdapter(
 
     private var _data = emptyList<Task>()
 
+    public var expendedPosition = -1;
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ToDoViewHolder {
         return ToDoViewHolder.newInstance(parent)
     }
@@ -22,7 +24,7 @@ class ToDoListAdapter(
     override fun getItemCount(): Int = _data.count()
 
     override fun onBindViewHolder(holder: ToDoViewHolder, position: Int) {
-        holder.bind(fragment, _data[position])
+        holder.bind(fragment, this, _data[position], position)
     }
 
     /**

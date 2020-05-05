@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import fr.paulfgx.bdmobileproject.R
 import fr.paulfgx.bdmobileproject.data.model.Task
+import fr.paulfgx.bdmobileproject.ui.adapter.ToDoListAdapter
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.DeleteTaskWidget
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.ITaskListener
 import fr.paulfgx.bdmobileproject.ui.widget.customviews.UpdateTaskWidget
@@ -14,7 +15,7 @@ import kotlinx.android.synthetic.main.holder_todo.view.*
 
 class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
-    fun bind(fragment: ITaskListener, task: Task) {
+    fun bind(fragment: ITaskListener, adapter: ToDoListAdapter, task: Task, position: Int) {
 
         itemView.apply {
             tv_nom.text = task.name
@@ -22,32 +23,20 @@ class ToDoViewHolder private constructor(itemView: View) : RecyclerView.ViewHold
             tv_updated_at.text = "Updated At : "+ task.updatedAt
             checkbox.isChecked = task.isSelected
 
-            container2.visibility = View.GONE
-            expand_action.setImageResource(R.drawable.ic_expand_more)
-
-            // Setup Layout Transition
-            view_holder_root.layoutTransition.enableTransitionType(LayoutTransition.CHANGING)
-            view_holder_root.layoutTransition.setDuration(300)
+            if (task.isExpanded)
+                container2.visibility = View.VISIBLE
+            else
+                container2.visibility = View.GONE
 
             // Click Listeners
             setOnClickListener {
-                task.isSelected = !task.isSelected
-                checkbox.isChecked = task.isSelected
-                fragment.onCheckedChangeListener(task)
+                // Changing the expanded state on click
+                fragment.onExpandedChangeListener(position, adapter.expendedPosition)
+                adapter.expendedPosition = position
             }
             checkbox.setOnClickListener {
                 task.isSelected = itemView.checkbox.isChecked
                 fragment.onCheckedChangeListener(task)
-            }
-            expand_action.setOnClickListener {
-                if (container2.visibility == View.GONE) {
-                    expand_action.setImageResource(R.drawable.ic_expand_less)
-                    container2.visibility = View.VISIBLE
-                }
-                else {
-                    container2.visibility = View.GONE
-                    expand_action.setImageResource(R.drawable.ic_expand_more)
-                }
             }
             delete.setOnClickListener {
                 DeleteTaskWidget(fragment, task)

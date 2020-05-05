@@ -8,5 +8,7 @@ data class Task(
     var createdAt: String,
     var updatedAt: String,
     @set:Exclude @get:Exclude
-    var firebaseId: String
+    var firebaseId: String,
+    @set:Exclude @get:Exclude
+    var isExpanded: Boolean = false
 )

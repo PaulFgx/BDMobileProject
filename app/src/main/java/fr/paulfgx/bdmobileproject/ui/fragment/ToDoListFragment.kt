@@ -116,6 +116,15 @@ class ToDoListFragment : Fragment(), ITaskListener {
         updateTaskInFirebase(task)
     }
 
+    override fun onExpandedChangeListener(newPosition: Int, oldPosition: Int) {
+        if (oldPosition != -1) {
+            taskList[oldPosition].isExpanded = false
+            toDoListAdapter.notifyItemChanged(oldPosition)
+        }
+        taskList[newPosition].isExpanded = true
+        toDoListAdapter.notifyItemChanged(newPosition)
+    }
+
     private fun createFabClickListener() {
         fab.setOnClickListener {
             AddTaskWidget(this)
@@ -233,6 +242,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 if (mapIdToPosition.containsKey(firebaseId)) {
                     val updateTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
                     val position = mapIdToPosition[firebaseId] as Int
+                    var isExpanded = taskList[position].isExpanded
+                    updateTask.isExpanded = isExpanded
                     taskList[position] = updateTask
                     toDoListAdapter.notifyItemChanged(position)
                 }
