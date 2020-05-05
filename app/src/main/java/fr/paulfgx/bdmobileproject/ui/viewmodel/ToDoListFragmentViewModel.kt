@@ -44,7 +44,7 @@ open class ToDoListFragmentViewModel(
 
     fun searchWith(listTask: MutableList<Task>, searchValue: String, onSuccess: OnSuccess<MutableList<Task>>) {
         viewModelScope.launch {
-            listTask.filter { it.name.contains(searchValue.unAccent(), ignoreCase = true) }
+            listTask.filter { it.name.unAccent().contains(searchValue.unAccent(), ignoreCase = true) }
                 .toMutableList()
                 .run(onSuccess)
         }

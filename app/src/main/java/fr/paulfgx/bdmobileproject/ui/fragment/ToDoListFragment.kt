@@ -30,12 +30,13 @@ import kotlinx.android.synthetic.main.fragment_todolist.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
-    private var staticTaskList = listOf<Task>()
+    private var staticTaskList = mutableListOf<Task>()
+    private var taskList = mutableListOf<Task>()
+
+    private val tasksRef = Firebase.database.reference.child("Tasks")
+    private var mapIdToPosition = mutableMapOf<String, Int>()
 
     private lateinit var viewModel: ToDoListFragmentViewModel
-    private var mapIdToPosition = mutableMapOf<String, Int>()
-    private val tasksRef = Firebase.database.reference.child("Tasks")
-    private var taskList = mutableListOf<Task>()
     private lateinit var toDoListAdapter: ToDoListAdapter
     private lateinit var searchView: SearchView
 
@@ -265,7 +266,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
                 if (!mapIdToPosition.containsKey(firebaseId)) {
-                    taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
+                    val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
+                    taskList.add(newTask)
+                    staticTaskList.add(newTask)
                     val position = mapIdToPosition.size
                     mapIdToPosition[firebaseId] = position
                     toDoListAdapter.notifyItemInserted(position)
@@ -286,6 +289,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     var isExpanded = taskList[position].isExpanded
                     updateTask.isExpanded = isExpanded
                     taskList[position] = updateTask
+                    staticTaskList[position] = updateTask
                     toDoListAdapter.notifyItemChanged(position)
                 }
             }
@@ -296,6 +300,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 if (mapIdToPosition.containsKey(firebaseId)) {
                     val position = getPositionWithFirebaseId(firebaseId) as Int
                     taskList.removeAt(position)
+                    staticTaskList.removeAt(position)
                     toDoListAdapter.notifyDataSetChanged()
                     updateMapWithNewPositions()
                 }
