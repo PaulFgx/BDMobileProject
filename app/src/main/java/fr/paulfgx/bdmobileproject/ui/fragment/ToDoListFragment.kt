@@ -31,12 +31,9 @@ import kotlinx.android.synthetic.main.fragment_todolist.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
-    private val tasksRef = Firebase.database.reference.child("Tasks")
-
     private lateinit var viewModel: ToDoListFragmentViewModel
     private lateinit var toDoListAdapter: ToDoListAdapter
     private lateinit var searchView: SearchView
-    private var currentSearch = ""
 
     companion object {
         private const val TAG = "ReadValue"
@@ -46,7 +43,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this@ToDoListFragment, ToDoListFragmentViewModel).get()
         setHasOptionsMenu(true)
-        tasksRef.keepSynced(true)
+        VarGlobal.tasksRef.keepSynced(true)
     }
 
     override fun onCreateView(
@@ -83,7 +80,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
                 reinitExpanded()
-                currentSearch = newText
+                VarGlobal.currentSearch = newText
                 var list = VarGlobal.completeTaskList.toMutableList()
                 viewModel.searchWith(list, newText) {
                     VarGlobal.taskList = it.toMutableList()
@@ -100,7 +97,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
             }
         })
         searchView.setOnCloseListener {
-            currentSearch = ""
+            VarGlobal.currentSearch = ""
             fragment_main_layout.hideKeyboard()
             VarGlobal.taskList = VarGlobal.completeTaskList.toMutableList()
             toDoListAdapter.submitList(VarGlobal.taskList)
@@ -127,19 +124,26 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     override fun onRequestAddingTask(name: String, isSelected: Boolean) {
-        writeNewTaskInFirebase(name, isSelected)
+        viewModel.writeNewTaskInFirebase(name, isSelected) {
+            toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
+        }
     }
 
     override fun onRequestDeleteTask(task: Task) {
-        deleteTaskInFirebase(task)
+        viewModel.deleteTaskInFirebase(task) {
+            toDoListAdapter.notifyDataSetChanged()
+            toDoListAdapter.expendedPosition = -1
+        }
     }
 
     override fun onRequestUpdateTask(task: Task) {
-        updateTaskInFirebase(task)
+        viewModel.updateTaskInFirebase(task) { position ->
+            toDoListAdapter.notifyItemChanged(position)
+        }
     }
 
     override fun onCheckedChangeListener(task: Task) {
-        updateTaskInFirebase(task)
+        viewModel.updateTaskInFirebase(task) {}
     }
 
     override fun onExpandedChangeListener(newPosition: Int, oldPosition: Int) {
@@ -151,7 +155,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
         toDoListAdapter.notifyItemChanged(newPosition)
     }
 
-    fun refreshAdapter() {
+    private fun refreshAdapter() {
         updateMapWithNewPositions()
         toDoListAdapter.submitList(VarGlobal.taskList)
     }
@@ -197,54 +201,10 @@ class ToDoListFragment : Fragment(), ITaskListener {
     private fun getPositionWithFirebaseId(id: String) = VarGlobal.mapIdToPosition[id]
 
     //region Firebase Access
-    private fun writeNewTaskInFirebase(name: String, isSelected: Boolean) {
-        var idTask = tasksRef.push().key!!
-        val currentTime = getCurrentDateTime()
-        val task = Task(name, isSelected, currentTime, currentTime, idTask)
-        if (currentSearch == "" || task.matches(currentSearch))
-            VarGlobal.taskList.add(task)
-        VarGlobal.completeTaskList.add(task)
-        toDoListAdapter.notifyItemInserted(toDoListAdapter.itemCount)
-        VarGlobal.mapIdToPosition[idTask] = VarGlobal.taskList.size - 1
-        VarGlobal.completeMapIdToPosition[idTask] = VarGlobal.completeTaskList.size - 1
-        tasksRef.child(idTask).setValue(task)
-    }
-
-    private fun updateTaskInFirebase(task: Task) {
-        getPositionWithFirebaseId(task.firebaseId)?.let { position ->
-            task.updatedAt = getCurrentDateTime()
-            tasksRef.child(task.firebaseId).setValue(task)
-            VarGlobal.taskList[position] = task
-            toDoListAdapter.notifyItemChanged(position)
-        }
-    }
-
-    private fun deleteTaskInFirebase(task: Task) {
-        if (VarGlobal.mapIdToPosition.containsKey(task.firebaseId)) {
-            val position = VarGlobal.mapIdToPosition[task.firebaseId]
-            try {
-                VarGlobal.taskList.removeAt(position!!)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            toDoListAdapter.notifyDataSetChanged()
-            toDoListAdapter.expendedPosition = -1
-            tasksRef.child(task.firebaseId).removeValue()
-        }
-        if (VarGlobal.completeMapIdToPosition.containsKey(task.firebaseId)) {
-            val position = VarGlobal.completeMapIdToPosition[task.firebaseId]
-            try {
-                VarGlobal.completeTaskList.removeAt(position!!)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        updateMapWithNewPositions()
-    }
 
     private fun getDataFromFirebase() {
         // Get Data once when opening the application
-        tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
+        VarGlobal.tasksRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(error: DatabaseError) {
                 Log.d("FirebaseError", error.message)
             }
@@ -260,7 +220,15 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     val createdAt = task["createdAt"] as String
                     val updatedAt = task["updatedAt"] as String
                     VarGlobal.taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
-                    VarGlobal.completeTaskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
+                    VarGlobal.completeTaskList.add(
+                        Task(
+                            name,
+                            isChecked,
+                            createdAt,
+                            updatedAt,
+                            firebaseId
+                        )
+                    )
                     VarGlobal.mapIdToPosition.put(firebaseId, VarGlobal.mapIdToPosition.size)
                 }
                 VarGlobal.completeMapIdToPosition = VarGlobal.mapIdToPosition
@@ -273,7 +241,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
 
     private fun observeChange() {
 
-        tasksRef.addChildEventListener(object : ChildEventListener {
+        VarGlobal.tasksRef.addChildEventListener(object : ChildEventListener {
 
             override fun onChildAdded(dataSnapshot: DataSnapshot, previousChildName: String?) {
                 Log.d(TAG, "onChildAdded:" + dataSnapshot.key!!)
@@ -284,7 +252,7 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
                 val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
-                if (!VarGlobal.mapIdToPosition.containsKey(firebaseId) && newTask.matches(currentSearch)) {
+                if (!VarGlobal.mapIdToPosition.containsKey(firebaseId) && newTask.matches(VarGlobal.currentSearch)) {
                     VarGlobal.taskList.add(newTask)
                     val position = VarGlobal.taskList.size - 1
                     VarGlobal.mapIdToPosition[firebaseId] = position
