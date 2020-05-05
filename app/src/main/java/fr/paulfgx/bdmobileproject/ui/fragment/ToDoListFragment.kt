@@ -30,15 +30,18 @@ import kotlinx.android.synthetic.main.fragment_todolist.*
 
 class ToDoListFragment : Fragment(), ITaskListener {
 
-    private var staticTaskList = mutableListOf<Task>()
-    private var taskList = mutableListOf<Task>()
-
     private val tasksRef = Firebase.database.reference.child("Tasks")
+
+    private var completeTaskList = mutableListOf<Task>()
+    private var completeMapIdToPosition = mutableMapOf<String, Int>()
+
+    private var taskList = mutableListOf<Task>()
     private var mapIdToPosition = mutableMapOf<String, Int>()
 
     private lateinit var viewModel: ToDoListFragmentViewModel
     private lateinit var toDoListAdapter: ToDoListAdapter
     private lateinit var searchView: SearchView
+    private var currentSearch = ""
 
     companion object {
         private const val TAG = "ReadValue"
@@ -84,10 +87,13 @@ class ToDoListFragment : Fragment(), ITaskListener {
         searchView.setSearchableInfo(manager.getSearchableInfo(activity?.componentName))
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(newText: String): Boolean {
-                var list = staticTaskList.toMutableList()
+                currentSearch = newText
+                var list = completeTaskList.toMutableList()
                 viewModel.searchWith(list, newText) {
                     taskList = it
                     updateMapWithNewPositions()
+                    if (toDoListAdapter.expendedPosition != -1)
+                        taskList[toDoListAdapter.expendedPosition].isExpanded = false
                     toDoListAdapter.submitList(taskList)
                 }
                 return true
@@ -100,7 +106,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
         })
         searchView.setOnCloseListener {
             fragment_main_layout.hideKeyboard()
-            getDataFromFirebase()
+            taskList = completeTaskList
+            toDoListAdapter.submitList(taskList)
             return@setOnCloseListener false
         }
     }
@@ -191,6 +198,10 @@ class ToDoListFragment : Fragment(), ITaskListener {
         for (i in 0 until taskList.size) {
             mapIdToPosition[taskList[i].firebaseId] = i
         }
+        completeMapIdToPosition = mutableMapOf()
+        for (i in 0 until completeTaskList.size) {
+            completeMapIdToPosition[completeTaskList[i].firebaseId] = i
+        }
     }
 
     private fun getPositionWithFirebaseId(id: String) = mapIdToPosition[id]
@@ -245,7 +256,8 @@ class ToDoListFragment : Fragment(), ITaskListener {
                     taskList.add(Task(name, isChecked, createdAt, updatedAt, firebaseId))
                     mapIdToPosition.put(firebaseId, mapIdToPosition.size)
                 }
-                staticTaskList = taskList
+                completeTaskList = taskList
+                completeMapIdToPosition = mapIdToPosition
                 progress_bar.visibility = View.GONE
                 toDoListAdapter.submitList(taskList)
                 observeChange()
@@ -265,13 +277,21 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val createdAt = task["createdAt"] as String
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
+                val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
                 if (!mapIdToPosition.containsKey(firebaseId)) {
-                    val newTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
-                    taskList.add(newTask)
-                    staticTaskList.add(newTask)
-                    val position = mapIdToPosition.size
-                    mapIdToPosition[firebaseId] = position
-                    toDoListAdapter.notifyItemInserted(position)
+                    viewModel.matchCurrentSearch(name, currentSearch) {
+                        if (it) {
+                            taskList.add(newTask)
+                            val position = mapIdToPosition.size
+                            mapIdToPosition[firebaseId] = position
+                            toDoListAdapter.notifyItemInserted(position)
+                        }
+                    }
+                }
+                if (!completeMapIdToPosition.containsKey(firebaseId)) {
+                    completeTaskList.add(newTask)
+                    val position = completeMapIdToPosition.size
+                    completeMapIdToPosition[firebaseId] = position
                 }
             }
 
@@ -283,14 +303,17 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 val createdAt = task["createdAt"] as String
                 val updatedAt = task["updatedAt"] as String
                 val firebaseId = dataSnapshot.key as String
+                val updateTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
                 if (mapIdToPosition.containsKey(firebaseId)) {
-                    val updateTask = Task(name, isChecked, createdAt, updatedAt, firebaseId)
                     val position = mapIdToPosition[firebaseId] as Int
-                    var isExpanded = taskList[position].isExpanded
+                    val isExpanded = taskList[position].isExpanded
                     updateTask.isExpanded = isExpanded
                     taskList[position] = updateTask
-                    staticTaskList[position] = updateTask
                     toDoListAdapter.notifyItemChanged(position)
+                }
+                if (completeMapIdToPosition.containsKey(firebaseId)) {
+                    val position = completeMapIdToPosition[firebaseId] as Int
+                    completeTaskList[position] = updateTask
                 }
             }
 
@@ -300,9 +323,12 @@ class ToDoListFragment : Fragment(), ITaskListener {
                 if (mapIdToPosition.containsKey(firebaseId)) {
                     val position = getPositionWithFirebaseId(firebaseId) as Int
                     taskList.removeAt(position)
-                    staticTaskList.removeAt(position)
                     toDoListAdapter.notifyDataSetChanged()
                     updateMapWithNewPositions()
+                }
+                if (completeMapIdToPosition.containsKey(firebaseId)) {
+                    val position = completeMapIdToPosition[firebaseId] as Int
+                    completeTaskList.removeAt(position)
                 }
             }
 

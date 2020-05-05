@@ -50,6 +50,13 @@ open class ToDoListFragmentViewModel(
         }
     }
 
+    fun matchCurrentSearch(name: String, currentSearch: String, onSuccess: OnSuccess<Boolean>) {
+        viewModelScope.launch {
+            name.unAccent().contains(currentSearch.unAccent(), ignoreCase = true)
+                .run(onSuccess)
+        }
+    }
+
     companion object Factory : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel?> create(modelClass: Class<T>): T {
