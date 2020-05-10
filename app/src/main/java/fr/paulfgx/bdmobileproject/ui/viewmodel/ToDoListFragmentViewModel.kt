@@ -3,9 +3,9 @@ package fr.paulfgx.bdmobileproject.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.data.model.Task
-import fr.paulfgx.bdmobileproject.data.singleton.VarGlobal
-import fr.paulfgx.bdmobileproject.ui.fragment.ToDoListFragment
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
 import fr.paulfgx.bdmobileproject.ui.utils.unAccent
 import kotlinx.coroutines.launch
@@ -13,35 +13,45 @@ import kotlinx.coroutines.launch
 open class ToDoListFragmentViewModel(
 ) : ViewModel() {
 
+    val tasksRef = Firebase.database.reference.child("Tasks")
+
+    var completeTaskList = mutableListOf<Task>()
+    var completeMapIdToPosition = mutableMapOf<String, Int>()
+
+    var taskList = mutableListOf<Task>()
+    var mapIdToPosition = mutableMapOf<String, Int>()
+
+    var currentSearch = ""
+
     fun writeNewTaskInFirebase(name: String, isSelected: Boolean, onRefresh: OnRefresh) {
-        var idTask = VarGlobal.tasksRef.push().key!!
+        var idTask = tasksRef.push().key!!
         val currentTime = getCurrentDateTime()
         val task = Task(name, isSelected, currentTime, currentTime, idTask)
-        if (VarGlobal.currentSearch == "" || task.matches(VarGlobal.currentSearch)) {
-            VarGlobal.taskList.add(task)
-            VarGlobal.mapIdToPosition[idTask] = VarGlobal.taskList.size - 1
+        if (currentSearch == "" || task.matches(currentSearch)) {
+            taskList.add(task)
+            mapIdToPosition[idTask] = taskList.size - 1
             onRefresh()
         }
-        VarGlobal.completeTaskList.add(task)
-        VarGlobal.completeMapIdToPosition[idTask] = VarGlobal.completeTaskList.size - 1
-        VarGlobal.tasksRef.child(idTask).setValue(task)
+        completeTaskList.add(task)
+        completeMapIdToPosition[idTask] = completeTaskList.size - 1
+        tasksRef.child(idTask).setValue(task)
     }
 
     fun deleteTaskInFirebase(task: Task, onRefresh: OnRefresh) {
-        if (VarGlobal.mapIdToPosition.containsKey(task.firebaseId)) {
-            val position = VarGlobal.mapIdToPosition[task.firebaseId]
+        if (mapIdToPosition.containsKey(task.firebaseId)) {
+            val position = mapIdToPosition[task.firebaseId]
             try {
-                VarGlobal.taskList.removeAt(position!!)
+                taskList.removeAt(position!!)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
             onRefresh()
-            VarGlobal.tasksRef.child(task.firebaseId).removeValue()
+            tasksRef.child(task.firebaseId).removeValue()
         }
-        if (VarGlobal.completeMapIdToPosition.containsKey(task.firebaseId)) {
-            val position = VarGlobal.completeMapIdToPosition[task.firebaseId]
+        if (completeMapIdToPosition.containsKey(task.firebaseId)) {
+            val position = completeMapIdToPosition[task.firebaseId]
             try {
-                VarGlobal.completeTaskList.removeAt(position!!)
+                completeTaskList.removeAt(position!!)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -51,23 +61,23 @@ open class ToDoListFragmentViewModel(
 
     fun updateTaskInFirebase(task: Task, onRefreshAtPosition: OnRefreshAtPosition) {
         task.updatedAt = getCurrentDateTime()
-        if (VarGlobal.mapIdToPosition.containsKey(task.firebaseId)) {
-            var position = VarGlobal.mapIdToPosition[task.firebaseId]
-            VarGlobal.taskList[position!!] = task
+        if (mapIdToPosition.containsKey(task.firebaseId)) {
+            var position = mapIdToPosition[task.firebaseId]
+            taskList[position!!] = task
             onRefreshAtPosition(position)
-            VarGlobal.tasksRef.child(task.firebaseId).setValue(task)
+            tasksRef.child(task.firebaseId).setValue(task)
         }
-        if (VarGlobal.completeMapIdToPosition.containsKey(task.firebaseId)) {
-            val position = VarGlobal.completeMapIdToPosition[task.firebaseId]
-            VarGlobal.completeTaskList[position!!] = task
+        if (completeMapIdToPosition.containsKey(task.firebaseId)) {
+            val position = completeMapIdToPosition[task.firebaseId]
+            completeTaskList[position!!] = task
         }
     }
 
     fun sortByName(onFinish: OnFinish) {
         viewModelScope.launch {
             reinitList()
-            VarGlobal.taskList = VarGlobal.taskList.sortedBy { it.name }
-                .toMutableList()
+            taskList = taskList.sortedBy { it.name }
+                    .toMutableList()
             onFinish()
         }
     }
@@ -75,8 +85,8 @@ open class ToDoListFragmentViewModel(
     fun sortByCreatedAt(onFinish: OnFinish) {
         viewModelScope.launch {
             reinitList()
-            VarGlobal.taskList = VarGlobal.taskList.sortedByDescending { it.createdAt }
-                .toMutableList()
+            taskList = taskList.sortedByDescending { it.createdAt }
+                    .toMutableList()
             onFinish()
         }
     }
@@ -84,16 +94,16 @@ open class ToDoListFragmentViewModel(
     fun sortByUpdatedAt(onFinish: OnFinish) {
         viewModelScope.launch {
             reinitList()
-            VarGlobal.taskList = VarGlobal.taskList.sortedByDescending { it.updatedAt }
-                .toMutableList()
+            taskList = taskList.sortedByDescending { it.updatedAt }
+                    .toMutableList()
             onFinish()
         }
     }
 
     fun sortByChecked(onFinish: OnFinish) {
         viewModelScope.launch {
-            VarGlobal.taskList = VarGlobal.taskList.sortedByDescending { it.isSelected }
-                .toMutableList()
+            taskList = taskList.sortedByDescending { it.isSelected }
+                    .toMutableList()
             onFinish()
         }
     }
@@ -101,23 +111,23 @@ open class ToDoListFragmentViewModel(
     fun searchWith(listTask: MutableList<Task>, searchValue: String, onSuccess: OnSuccess<MutableList<Task>>) {
         viewModelScope.launch {
             listTask.filter { it.name.unAccent().contains(searchValue.unAccent(), ignoreCase = true) }
-                .toMutableList()
-                .run(onSuccess)
+                    .toMutableList()
+                    .run(onSuccess)
         }
     }
 
     private fun reinitList() {
-        VarGlobal.taskList = VarGlobal.completeTaskList.toMutableList()
+        taskList = completeTaskList.toMutableList()
     }
 
     private fun updateMapWithNewPositions() {
-        VarGlobal.mapIdToPosition = mutableMapOf()
-        for (i in 0 until VarGlobal.taskList.size) {
-            VarGlobal.mapIdToPosition[VarGlobal.taskList[i].firebaseId] = i
+        mapIdToPosition = mutableMapOf()
+        for (i in 0 until taskList.size) {
+            mapIdToPosition[taskList[i].firebaseId] = i
         }
-        VarGlobal.completeMapIdToPosition = mutableMapOf()
-        for (i in 0 until VarGlobal.completeTaskList.size) {
-            VarGlobal.completeMapIdToPosition[VarGlobal.completeTaskList[i].firebaseId] = i
+        completeMapIdToPosition = mutableMapOf()
+        for (i in 0 until completeTaskList.size) {
+            completeMapIdToPosition[completeTaskList[i].firebaseId] = i
         }
     }
 
