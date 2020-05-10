@@ -1,7 +1,6 @@
 package fr.paulfgx.bdmobileproject.ui.viewmodel
 
 import android.util.Log
-import android.view.View
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -14,8 +13,8 @@ import com.google.firebase.ktx.Firebase
 import fr.paulfgx.bdmobileproject.data.model.Task
 import fr.paulfgx.bdmobileproject.ui.fragment.ToDoListFragment
 import fr.paulfgx.bdmobileproject.ui.utils.getCurrentDateTime
+import fr.paulfgx.bdmobileproject.ui.utils.toDateTime
 import fr.paulfgx.bdmobileproject.ui.utils.unAccent
-import kotlinx.android.synthetic.main.fragment_todolist.*
 import kotlinx.coroutines.launch
 import java.lang.IllegalStateException
 
@@ -86,37 +85,66 @@ open class ToDoListFragmentViewModel(
         }
     }
 
-    fun sortByName(onFinish: OnFinish) {
+    fun sortByName(state: ToDoListFragment.State, onFinish: OnFinish) {
         viewModelScope.launch {
-            reinitList()
-            taskList = taskList.sortedBy { it.name }
-                    .toMutableList()
+            taskList = when (state) {
+                ToDoListFragment.State.ASCENDING -> {
+                    taskList.sortedBy { it.name.toLowerCase() }
+                            .toMutableList()
+                }
+                ToDoListFragment.State.DESCENDING -> {
+                    taskList.sortedByDescending { it.name.toLowerCase() }
+                            .toMutableList()
+                }
+            }
             onFinish()
         }
     }
 
-    fun sortByCreatedAt(onFinish: OnFinish) {
+    fun sortByCreatedAt(state: ToDoListFragment.State, onFinish: OnFinish) {
         viewModelScope.launch {
-            reinitList()
-            taskList = taskList.sortedByDescending { it.createdAt }
-                    .toMutableList()
+            taskList = when (state) {
+                ToDoListFragment.State.ASCENDING -> {
+                    taskList.sortedBy { it.createdAt.toDateTime() }
+                            .toMutableList()
+                }
+                ToDoListFragment.State.DESCENDING -> {
+                    taskList.sortedByDescending { it.createdAt.toDateTime() }
+                            .toMutableList()
+                }
+            }
             onFinish()
         }
     }
 
-    fun sortByUpdatedAt(onFinish: OnFinish) {
+    fun sortByUpdatedAt(state: ToDoListFragment.State, onFinish: OnFinish) {
         viewModelScope.launch {
-            reinitList()
-            taskList = taskList.sortedByDescending { it.updatedAt }
-                    .toMutableList()
+            taskList = when (state) {
+                ToDoListFragment.State.ASCENDING -> {
+                    taskList.sortedBy { it.updatedAt.toDateTime() }
+                            .toMutableList()
+                }
+                ToDoListFragment.State.DESCENDING -> {
+                    taskList.sortedByDescending { it.updatedAt.toDateTime() }
+                            .toMutableList()
+                }
+            }
             onFinish()
         }
     }
 
-    fun sortByChecked(onFinish: OnFinish) {
+    fun sortByChecked(state: ToDoListFragment.State, onFinish: OnFinish) {
         viewModelScope.launch {
-            taskList = taskList.sortedByDescending { it.isSelected }
-                    .toMutableList()
+            taskList = when (state) {
+                ToDoListFragment.State.ASCENDING -> {
+                    taskList.sortedBy { it.isSelected }
+                            .toMutableList()
+                }
+                ToDoListFragment.State.DESCENDING -> {
+                    taskList.sortedByDescending { it.isSelected }
+                            .toMutableList()
+                }
+            }
             onFinish()
         }
     }

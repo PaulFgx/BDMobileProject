@@ -9,7 +9,11 @@ import java.util.*
 
 @SuppressLint("SimpleDateFormat")
 fun getCurrentDateTime(): String {
-    val date = Date();
-    val formatter = SimpleDateFormat("MMM dd yyyy HH:mma")
+    val date = Date()
+    val formatter = SimpleDateFormat("dd-MM-yyyy | HH:mm")
     return formatter.format(date)
+}
+
+fun String.toDateTime(): LocalDateTime {
+    return LocalDateTime.parse(this, DateTimeFormatter.ofPattern("dd-MM-yyyy | HH:mm"))
 }

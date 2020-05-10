@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.SearchView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.get
@@ -25,6 +26,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
     private lateinit var viewModel: ToDoListFragmentViewModel
     private lateinit var toDoListAdapter: ToDoListAdapter
     private lateinit var searchView: SearchView
+    private lateinit var menu: Menu
+    enum class State { ASCENDING, DESCENDING }
+    private var sortState = mutableListOf(State.ASCENDING, State.ASCENDING, State.ASCENDING, State.ASCENDING)
 
     companion object {
         private const val TAG = "ReadValue"
@@ -75,7 +79,9 @@ class ToDoListFragment : Fragment(), ITaskListener {
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+
         inflater.inflate(R.menu.sort_menu, menu)
+        this.menu = menu
 
         val manager = requireActivity().getSystemService(Context.SEARCH_SERVICE) as SearchManager
 
@@ -115,16 +121,28 @@ class ToDoListFragment : Fragment(), ITaskListener {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.item_name -> {
-                viewModel.sortByName { refreshAdapter() }
+                viewModel.sortByName(sortState[0]) {
+                    refreshAdapter()
+                    reverseState(0, item)
+                }
             }
             R.id.item_created_at -> {
-                viewModel.sortByCreatedAt { refreshAdapter() }
+                viewModel.sortByCreatedAt(sortState[1]) {
+                    refreshAdapter()
+                    reverseState(1, item)
+                }
             }
             R.id.item_updated_at -> {
-                viewModel.sortByUpdatedAt { refreshAdapter() }
+                viewModel.sortByUpdatedAt(sortState[2]) {
+                    refreshAdapter()
+                    reverseState(2, item)
+                }
             }
             R.id.item_checked -> {
-                viewModel.sortByChecked { refreshAdapter() }
+                viewModel.sortByChecked(sortState[3]) {
+                    refreshAdapter()
+                    reverseState(3, item)
+                }
             }
         }
         return super.onOptionsItemSelected(item)
@@ -162,9 +180,23 @@ class ToDoListFragment : Fragment(), ITaskListener {
         toDoListAdapter.notifyItemChanged(newPosition)
     }
 
+    private fun reverseState(position: Int, menuItem: MenuItem) {
+        when (sortState[position]) {
+            State.ASCENDING -> {
+                sortState[position] = State.DESCENDING
+                menuItem.icon = ContextCompat.getDrawable(this.requireContext(), R.drawable.ic_arrow_upward)
+            }
+            State.DESCENDING -> {
+                sortState[position] = State.ASCENDING
+                menuItem.icon = ContextCompat.getDrawable(this.requireContext(), R.drawable.ic_arrow_downward)
+            }
+        }
+    }
+
     private fun refreshAdapter() {
         viewModel.updateMapWithNewPositions()
         toDoListAdapter.submitList(viewModel.taskList)
+        reinitExpanded()
     }
 
     private fun reinitExpanded() {
