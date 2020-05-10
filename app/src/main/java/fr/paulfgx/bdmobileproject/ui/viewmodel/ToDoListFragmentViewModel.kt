@@ -89,11 +89,11 @@ open class ToDoListFragmentViewModel(
         viewModelScope.launch {
             taskList = when (state) {
                 ToDoListFragment.State.ASCENDING -> {
-                    taskList.sortedBy { it.name.toLowerCase() }
+                    taskList.sortedBy { it.name.toLowerCase().unAccent() }
                             .toMutableList()
                 }
                 ToDoListFragment.State.DESCENDING -> {
-                    taskList.sortedByDescending { it.name.toLowerCase() }
+                    taskList.sortedByDescending { it.name.toLowerCase().unAccent() }
                             .toMutableList()
                 }
             }
